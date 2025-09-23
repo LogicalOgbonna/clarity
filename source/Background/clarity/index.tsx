@@ -56,8 +56,7 @@ const clarity = (category: string, links: string[]): void => {
 
   /**
    * Find the link for the given terms
-   * @param {string[]} terms
-   * @returns {Promise<string>}
+   * @returns {string}
    */
   const findLink = (): string | null => {
     /** use the links that were returned from the server if available
@@ -143,8 +142,10 @@ const clarity = (category: string, links: string[]): void => {
 
       // Animate in the chat UI
       setTimeout(() => {
-        chatUI.style.transform = 'translateY(0)';
-        chatUI.style.opacity = '1';
+        if (chatUI) {
+          chatUI.style.transform = 'translateY(0)';
+          chatUI.style.opacity = '1';
+        }
       }, 10);
     }
 
@@ -273,38 +274,33 @@ const clarity = (category: string, links: string[]): void => {
     </div>
   `;
 
-    document
-      .getElementById('close-chat-btn')
-      .addEventListener('click', (): void => {
+    const closeBtn = document.getElementById('close-chat-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (): void => {
         // Animate out the chat UI
-        chatUI.style.transform = 'translateY(20px)';
-        chatUI.style.opacity = '0';
+        if (chatUI) {
+          chatUI.style.transform = 'translateY(20px)';
+          chatUI.style.opacity = '0';
 
-        setTimeout(() => {
-          chatUI.remove();
-          // Show the chat icon again
-          const chatIcon = document.getElementById('chat-icon');
-          if (chatIcon) {
-            chatIcon.style.display = 'flex';
-          }
-        }, 300);
+          setTimeout(() => {
+            if (chatUI) {
+              chatUI.remove();
+            }
+            // Show the chat icon again
+            const chatIcon = document.getElementById('chat-icon');
+            if (chatIcon) {
+              chatIcon.style.display = 'flex';
+            }
+          }, 300);
+        }
       });
+    }
 
-    const chatInput = document.getElementById('chat-input');
+    const chatInput = document.getElementById('chat-input') as HTMLInputElement;
     const chatSendBtn = document.getElementById('chat-send-btn');
     const chatContent = document.getElementById('chat-content');
 
-    chatSendBtn.addEventListener('click', (): void => {
-      handleChat(chatInput.value);
-    });
-
-    chatInput.addEventListener('keypress', (e: KeyboardEvent): void => {
-      if (e.key === 'Enter') {
-        handleChat(chatInput.value);
-      }
-    });
-
-    const handleChat = async (question: string): Promise<void> => {
+    const handleChat = (question: string): void => {
       if (!question.trim()) return;
 
       // Create user message bubble
@@ -323,10 +319,16 @@ const clarity = (category: string, links: string[]): void => {
       text-align: right;
     `;
       userMessage.textContent = question;
-      chatContent.appendChild(userMessage);
+      if (chatContent) {
+        chatContent.appendChild(userMessage);
+      }
 
-      chatInput.value = '';
-      chatContent.scrollTop = chatContent.scrollHeight;
+      if (chatInput) {
+        chatInput.value = '';
+      }
+      if (chatContent) {
+        chatContent.scrollTop = chatContent.scrollHeight;
+      }
 
       // Create AI response bubble with loading state
       const responseMessage = document.createElement('div');
@@ -362,8 +364,10 @@ const clarity = (category: string, links: string[]): void => {
     `;
 
       responseMessage.appendChild(typingIndicator);
-      chatContent.appendChild(responseMessage);
-      chatContent.scrollTop = chatContent.scrollHeight;
+      if (chatContent) {
+        chatContent.appendChild(responseMessage);
+        chatContent.scrollTop = chatContent.scrollHeight;
+      }
 
       // Add CSS animation for typing indicator
       if (!document.getElementById('typing-animation')) {
@@ -378,6 +382,7 @@ const clarity = (category: string, links: string[]): void => {
         document.head.appendChild(style);
       }
 
+      // Use fetch with .then() instead of async/await for better compatibility
       const payload = {
         contents: [
           {
@@ -390,30 +395,49 @@ const clarity = (category: string, links: string[]): void => {
         ],
       };
 
-      try {
-        const apiResponse = await fetch(CLARITY_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
+      fetch(CLARITY_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          console.log('🚀 ~ handleChat ~ result:', result);
+          const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (aiResponse) {
+            responseMessage.textContent = aiResponse;
+          } else {
+            responseMessage.textContent =
+              "I'm sorry, I couldn't generate a response for that.";
+          }
+        })
+        .catch((error) => {
+          console.error('Chat error:', error);
+          responseMessage.textContent = 'An error occurred. Please try again.';
+        })
+        .finally(() => {
+          if (chatContent) {
+            chatContent.scrollTop = chatContent.scrollHeight;
+          }
         });
-
-        const result = await apiResponse.json();
-        const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (aiResponse) {
-          responseMessage.textContent = aiResponse;
-        } else {
-          responseMessage.textContent =
-            "I'm sorry, I couldn't generate a response for that.";
-        }
-      } catch (error) {
-        console.error('Chat error:', error);
-        responseMessage.textContent = 'An error occurred. Please try again.';
-      }
-      chatContent.scrollTop = chatContent.scrollHeight;
     };
+
+    if (chatSendBtn && chatInput) {
+      chatSendBtn.addEventListener('click', (): void => {
+        handleChat(chatInput.value);
+      });
+    }
+
+    if (chatInput) {
+      chatInput.addEventListener('keypress', (e: KeyboardEvent): void => {
+        if (e.key === 'Enter') {
+          handleChat(chatInput.value);
+        }
+      });
+    }
   };
 
   /**
@@ -423,12 +447,14 @@ const clarity = (category: string, links: string[]): void => {
 
   const link = findLink();
   const {hostname} = getCurrentUrl();
-  showChatUI(`Could not find a link for ${category} of ${hostname}.`);
+
   if (!link) {
     showChatUI(`Could not find a link for ${category} of ${hostname}.`);
     return;
   }
+
   console.log('🚀 ~ clarity ~ links:->', link);
+  showChatUI(`Found ${category} link for ${hostname}: ${link}`);
 };
 
 export default clarity;

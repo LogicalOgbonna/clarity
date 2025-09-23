@@ -1,3 +1,6 @@
+/* eslint-disable node/no-unpublished-require */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 const path = require('path');
 const webpack = require('webpack');
 const FilemanagerPlugin = require('filemanager-webpack-plugin');
@@ -87,7 +90,8 @@ module.exports = {
         use: {
           loader: 'wext-manifest-loader',
           options: {
-            usePackageJSONVersion: true, // set to false to not use package.json version for manifest
+            usePackageJSONVersion: true,
+            // set to false to not use package.json version for manifest
           },
         },
         exclude: /node_modules/,
@@ -96,12 +100,44 @@ module.exports = {
         test: /\.(js|ts)x?$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
+        options: {
+          presets: [
+            [
+              '@babel/preset-env',
+              {
+                useBuiltIns: false,
+                modules: false,
+                targets: {
+                  chrome: '49',
+                  firefox: '52',
+                  opera: '36',
+                  edge: '79',
+                },
+              },
+            ],
+            '@babel/typescript',
+            '@babel/react',
+          ],
+          plugins: [
+            ['@babel/plugin-proposal-class-properties'],
+            ['@babel/plugin-transform-destructuring', {useBuiltIns: true}],
+            ['@babel/plugin-proposal-object-rest-spread', {useBuiltIns: true}],
+            [
+              '@babel/plugin-transform-runtime',
+              {
+                helpers: false,
+                regenerator: true,
+              },
+            ],
+          ],
+        },
       },
       {
         test: /\.(sa|sc|c)ss$/,
         use: [
           {
-            loader: MiniCssExtractPlugin.loader, // It creates a CSS file per JS file which contains CSS
+            loader: MiniCssExtractPlugin.loader,
+            // It creates a CSS file per JS file which contains CSS
           },
           {
             loader: 'css-loader', // Takes the CSS files and returns the CSS with imports and url(...) for Webpack
@@ -189,10 +225,7 @@ module.exports = {
       }),
       new CSSMinimizerPlugin({
         minimizerOptions: {
-          preset: [
-            "default", 
-            { discardComments: { removeAll: true } },
-          ],
+          preset: ['default', {discardComments: {removeAll: true}}],
         },
       }),
       new FilemanagerPlugin({
