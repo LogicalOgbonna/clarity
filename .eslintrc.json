@@ -21,7 +21,9 @@
 		"node/no-unpublished-import": "off",
 		"node/no-unsupported-features/es-syntax": ["error", {
 			"ignores": ["modules"]
-		}]
+		}],
+		"object-curly-spacing": ["error", "never"],
+		"max-len": ["error", { "code": 100, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }]
 	},
 	"env": {
 		"webextensions": true
