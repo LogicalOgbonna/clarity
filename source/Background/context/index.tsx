@@ -1,5 +1,5 @@
 import {browser} from 'webextension-polyfill-ts';
-import clarity from '../clarity';
+import clarity from '../../common/clarity';
 
 /**
  * On context menu clicked, handle the context menu click
@@ -19,7 +19,7 @@ browser.contextMenus.onClicked.addListener(async (event, tab) => {
         await browser.scripting.executeScript({
           target: {tabId: tab.id},
           func: clarity,
-          args: ['terms', termsToSend],
+          args: ['terms', true, termsToSend, null],
         });
       }
       break;
@@ -33,7 +33,7 @@ browser.contextMenus.onClicked.addListener(async (event, tab) => {
         await browser.scripting.executeScript({
           target: {tabId: tab.id},
           func: clarity,
-          args: ['privacy', privacyToSend],
+          args: ['privacy', true, privacyToSend, null],
         });
       }
       break;

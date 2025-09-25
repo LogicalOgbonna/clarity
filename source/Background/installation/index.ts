@@ -1,5 +1,5 @@
 import {browser} from 'webextension-polyfill-ts';
-import {fetchDefaultLinks} from '../api';
+import {fetchDefaultLinks, getBrowserId} from '../api';
 import {setUpContextMenus} from '../context/base';
 
 /**
@@ -8,5 +8,6 @@ import {setUpContextMenus} from '../context/base';
  */
 browser.runtime.onInstalled.addListener(async (): Promise<void> => {
   await fetchDefaultLinks();
+  await getBrowserId();
   setUpContextMenus();
 });
