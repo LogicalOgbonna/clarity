@@ -2,65 +2,31 @@ import {browser} from 'webextension-polyfill-ts';
 
 const API_URL = 'http://localhost:3000/api';
 
-type Policy = {
-  id: number;
-  domain: string;
-  link: string;
-  type: string;
-  version: string;
-  content: string;
-  datePublished: Date;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-const fetchDefaultLinks = async (): Promise<{
-  policies: Policy[];
-}> => {
-  try {
-    const response = await fetch(`${API_URL}/policy`);
-    const {policies}: {policies: Policy[]} = await response.json();
-    const privacy: Array<{
-      [key: string]: string;
-    }> = [];
-    const terms: Array<{
-      [key: string]: string;
-    }> = [];
-    policies.forEach((policy) => {
-      if (policy.type === 'privacy') {
-        privacy.push({[policy.link]: policy.link});
-      } else if (policy.type === 'terms') {
-        terms.push({[policy.link]: policy.link});
-      }
-    });
-    await browser.storage.sync.set({privacy, terms});
-    return {policies};
-  } catch (error) {
-    console.error('Error fetching default links:', error);
-    return {policies: []};
-  }
-};
-
 const getBrowserId = async (): Promise<void> => {
-  const existing = await browser.storage.sync.get('browserId');
-  if (existing.browserId) {
+  const existing = await browser.storage.sync.get('clarityBrowserId');
+  if (existing.clarityBrowserId) {
     return;
   }
-  const browserId = crypto.randomUUID();
+  const clarityBrowserId = crypto.randomUUID();
   try {
-    const response = await fetch(`${API_URL}/browserId`, {
+    const response = await fetch(`${API_URL}/user/browser`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({browserId}),
+      body: JSON.stringify({browserId: clarityBrowserId}),
     });
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
-    await browser.storage.sync.set({browserId});
+
+    const {
+      user: {id: clarityUserId},
+    } = await response.json();
+    await browser.storage.sync.set({clarityBrowserId});
+    await browser.storage.sync.set({clarityUserId});
   } catch (error) {
     console.error('Error getting browser ID:', error);
   }
 };
-export {fetchDefaultLinks, getBrowserId};
+export {getBrowserId};

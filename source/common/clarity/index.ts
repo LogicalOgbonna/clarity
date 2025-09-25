@@ -39,119 +39,21 @@ declare const self: {
   Translator: typeof Translator;
 };
 
-const clarity = (
-  category: string,
-  findInternalLink: boolean,
-  externalLinks?: string[],
-  externalLink?: string
-): void => {
-  const CLARITY_API_URL = 'http://localhost:5005/api';
-
-  const DEFAULT_TERMS_OF_SERVICE_KEYWORDS = [
-    'terms of service',
-    'terms',
-    'tos',
-    'terms and conditions',
-    'user agreement',
-    'service agreement',
-    'terms of use',
-  ];
-  const DEFAULT_PRIVACY_POLICY_KEYWORDS = [
-    'privacy policy',
-    'privacy',
-    'data protection',
-    'privacy notice',
-    'privacy statement',
-    'data privacy',
-    'privacy & terms',
-  ];
-  const DEFAULT_KEYWORDS = {
-    terms: DEFAULT_TERMS_OF_SERVICE_KEYWORDS,
-    privacy: DEFAULT_PRIVACY_POLICY_KEYWORDS,
-  };
+const clarity = (category: string, externalLink?: string): void => {
+  const CLARITY_API_URL = 'http://localhost:3000/api';
+  const {hostname} = new URL(window.location.href);
 
   /**
-   * Check if the URL is valid
-   * @param {string} url
-   * @returns {boolean}
+   * Chat ID generated from hostname, category and date
    */
-  const isValidUrl = (url: string): boolean => {
-    try {
-      const {host} = new URL(url);
-      return !!host;
-    } catch (e) {
-      console.log('🚀 ~ isValidUrl ~ e:', e);
-      return false;
-    }
-  };
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateString = `${day}_${month}_${year}`;
+  const chatId = `${hostname}_${category}_${dateString}`;
 
-  /**
-   * Get the current URL
-   * @returns {string}
-   */
-  const getCurrentUrl = (): {
-    hostname: string;
-    host: string;
-    pathname: string;
-  } => {
-    const {hostname, host, pathname} = new URL(window.location.href);
-    return {hostname: hostname.replace('www.', ''), host, pathname};
-  };
-
-  /**
-   * Find the link for the given terms
-   * @returns {string}
-   */
-  const findLink = (links: string[]): string | null => {
-    /** use the links that were returned from the server if available
-     * otherwise, find the link for the given terms
-     */
-    const {hostname} = getCurrentUrl();
-    let link = links[hostname as keyof typeof links] as unknown as string;
-    if (link && isValidUrl(link)) {
-      return link;
-    }
-
-    const terms = DEFAULT_KEYWORDS[category as keyof typeof DEFAULT_KEYWORDS];
-    const aTags = Array.from(document.querySelectorAll('a[href]'));
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < terms.length; i++) {
-      const term = terms[i];
-      const elements = aTags.filter((a: Element) => {
-        const {href} = a as HTMLAnchorElement;
-        return href.toLowerCase().includes(term.toLowerCase());
-      });
-      if (elements.length > 0) {
-        // Get the best match by checking text content.
-        let bestMatch: HTMLAnchorElement | null = null;
-        elements.forEach((el) => {
-          if (el.textContent?.toLowerCase().includes(term.toLowerCase())) {
-            bestMatch = el as HTMLAnchorElement;
-          }
-        });
-        if (!bestMatch) {
-          elements.forEach((el) => {
-            if (
-              terms.some((keyword) =>
-                el.textContent?.toLowerCase().includes(keyword.toLowerCase())
-              )
-            ) {
-              bestMatch = el as HTMLAnchorElement;
-            }
-          });
-        }
-
-        link = bestMatch
-          ? (bestMatch as unknown as HTMLAnchorElement)?.href
-          : (elements[0] as HTMLAnchorElement)?.href;
-        if (isValidUrl(link)) {
-          return link;
-        }
-      }
-    }
-    return link;
-  };
-
+  console.log('🚀 ~ clarity ~ chatId:', chatId);
   // Track the current language state of each message
   const messageLanguageState = new Map<string, string>();
 
@@ -247,12 +149,12 @@ const clarity = (
               messageElement.appendChild(translationNote);
             })
             .catch((error: unknown) => {
-              console.error('Translation error:', error);
+              console.log('🚀 ~ translateContent ~ error:', error);
             });
         });
       })
       .catch((error) => {
-        console.error('Translation error:', error);
+        console.log('🚀 ~ translateContent ~ error:', error);
       });
   };
 
@@ -351,7 +253,7 @@ const clarity = (
                   }
                 })
                 .catch((error: unknown) => {
-                  console.error('Error summarizing chunks:', error);
+                  console.log('🚀 ~ browserSummarize ~ error:', error);
                   responseElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error}</div>`;
                 });
             } else {
@@ -436,100 +338,6 @@ const clarity = (
       })
       .catch((error) => {
         console.error('Browser summarize error:', error);
-      });
-  };
-
-  const serverSummarize = ({
-    url,
-    browserId,
-    messageElement,
-  }: {
-    url: string;
-    browserId: string;
-    messageElement: HTMLElement;
-  }): void => {
-    fetch(`${CLARITY_API_URL}/summarize`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({url, browserId}),
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        // Generate unique ID for this message
-        const messageId = `message-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        // Initialize language state for this message (default to 'en')
-        messageLanguageState.set(messageId, 'en');
-
-        // Render the HTML content directly since the server returns formatted HTML
-        // Add some styling to ensure proper rendering
-        messageElement.innerHTML = `
-          <div style="
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-          ">
-            <style>
-              .clarity-content ul {
-                margin: 8px 0;
-                padding-left: 20px;
-              }
-              .clarity-content li {
-                margin: 4px 0;
-              }
-              .clarity-content p {
-                margin: 8px 0;
-              }
-              .clarity-content b {
-                font-weight: 600;
-              }
-            </style>
-            <div class="clarity-content" id="${messageId}">
-              ${result.text}
-            </div>
-            <div style="
-              margin-top: 12px;
-              padding-top: 8px;
-              border-top: 1px solid #e0e0e0;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            ">
-              ${languageSelector(messageId)}
-            </div>
-          </div>
-        `;
-        // Add event listener for this specific message's translate button
-        const translateSelector = messageElement.querySelector(
-          `[data-message-id="${messageId}"]`
-        ) as HTMLSelectElement;
-        if (translateSelector) {
-          translateSelector.addEventListener('change', (): void => {
-            const selectedLanguage = translateSelector.value;
-            if (selectedLanguage) {
-              const targetMessage = document.getElementById(messageId);
-              if (targetMessage) {
-                // Get current language state or default to 'en'
-                const currentSourceLanguage =
-                  messageLanguageState.get(messageId) || 'en';
-                translateContent({
-                  sourceLanguage: currentSourceLanguage,
-                  targetLanguage: selectedLanguage,
-                  messageElement: targetMessage,
-                  originalText: result.text,
-                  messageId,
-                });
-              }
-              // Reset the selector
-              translateSelector.value = selectedLanguage;
-            }
-          });
-        }
-      })
-      .catch((error) => {
-        console.error('Server summarize error:', error);
-        messageElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error}</div>`;
       });
   };
 
@@ -840,7 +648,7 @@ const clarity = (
           }
         })
         .catch((error) => {
-          console.error('Chat error:', error);
+          console.log('🚀 ~ handleChat ~ error:', error);
           responseMessage.textContent = 'An error occurred. Please try again.';
         })
         .finally(() => {
@@ -865,16 +673,17 @@ const clarity = (
     }
   };
 
+  const cachePolicy = localStorage.getItem(`${hostname}_${category}`);
   /**
    * Find the link for the given terms
    * Start of something else
    */
 
-  const internalLink = findInternalLink
-    ? findLink(externalLinks || [])
-    : externalLink;
-
-  const {hostname} = getCurrentUrl();
+  let internalLink = externalLink!;
+  if (cachePolicy) {
+    const policy = JSON.parse(cachePolicy);
+    internalLink = policy.link;
+  }
 
   if (!internalLink) {
     showChatUI(`Could not find a link for ${category} of ${hostname}.`);
@@ -956,15 +765,129 @@ const clarity = (
     document.head.appendChild(style);
   }
 
-  chrome.storage.sync.get('browserId').then((result) => {
-    if (!result.browserId) {
+  const serverSummarize = ({
+    url,
+    browserId,
+    userId,
+    messageElement,
+    contentCategory,
+  }: {
+    url: string;
+    browserId: string;
+    userId: string;
+    messageElement: HTMLElement;
+    contentCategory: string;
+  }): void => {
+    console.log('🚀 ~ serverSummarize ~ browserId:', browserId);
+    // If no cached content, proceed with API call
+    fetch(`${CLARITY_API_URL}/summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        link: url,
+        type: contentCategory,
+        userId,
+        chatId,
+        message: userMessage.innerText,
+      }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        // Generate unique ID for this message
+        const messageId = `message-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        // Initialize language state for this message (default to 'en')
+        messageLanguageState.set(messageId, 'en');
+
+        // Render the HTML content directly since the server returns formatted HTML
+        // Add some styling to ensure proper rendering
+        messageElement.innerHTML = `
+          <div style="
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+          ">
+            <style>
+              .clarity-content ul {
+                margin: 8px 0;
+                padding-left: 20px;
+              }
+              .clarity-content li {
+                margin: 4px 0;
+              }
+              .clarity-content p {
+                margin: 8px 0;
+              }
+              .clarity-content b {
+                font-weight: 600;
+              }
+            </style>
+            <div class="clarity-content" id="${messageId}">
+              ${result.text}
+            </div>
+            <div style="
+              margin-top: 12px;
+              padding-top: 8px;
+              border-top: 1px solid #e0e0e0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              ${languageSelector(messageId)}
+            </div>
+          </div>
+        `;
+        // Add event listener for this specific message's translate button
+        const translateSelector = messageElement.querySelector(
+          `[data-message-id="${messageId}"]`
+        ) as HTMLSelectElement;
+        if (translateSelector) {
+          translateSelector.addEventListener('change', (): void => {
+            const selectedLanguage = translateSelector.value;
+            if (selectedLanguage) {
+              const targetMessage = document.getElementById(messageId);
+              if (targetMessage) {
+                // Get current language state or default to 'en'
+                const currentSourceLanguage =
+                  messageLanguageState.get(messageId) || 'en';
+                translateContent({
+                  sourceLanguage: currentSourceLanguage,
+                  targetLanguage: selectedLanguage,
+                  messageElement: targetMessage,
+                  originalText: result.text,
+                  messageId,
+                });
+              }
+              // Reset the selector
+              translateSelector.value = selectedLanguage;
+            }
+          });
+        }
+      })
+      .catch((error) => {
+        console.log('🚀 ~ serverSummarize ~ error:', error);
+        messageElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error}</div>`;
+      });
+  };
+
+  chrome.storage.sync.get('clarityBrowserId').then((browserId) => {
+    if (!browserId.clarityBrowserId) {
       browserSummarize(internalLink, responseMessage);
       return;
     }
-    serverSummarize({
-      url: internalLink,
-      browserId: result.browserId,
-      messageElement: responseMessage,
+    chrome.storage.sync.get('clarityUserId').then((userId) => {
+      if (!userId.clarityUserId) {
+        browserSummarize(internalLink, responseMessage);
+        return;
+      }
+      serverSummarize({
+        url: internalLink,
+        browserId: browserId.clarityBrowserId,
+        userId: userId.clarityUserId,
+        messageElement: responseMessage,
+        contentCategory: category,
+      });
     });
   });
 };

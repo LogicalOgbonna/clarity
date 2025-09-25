@@ -10,32 +10,18 @@ browser.contextMenus.onClicked.addListener(async (event, tab) => {
   if (!tab?.id) return;
   switch (event.menuItemId) {
     case 'privacy_summary_terms_of_service':
-      {
-        let termsToSend: string[] = [];
-        const terms = await browser.storage.sync.get('terms');
-        if (terms?.terms) {
-          termsToSend = terms?.terms;
-        }
-        await browser.scripting.executeScript({
-          target: {tabId: tab.id},
-          func: clarity,
-          args: ['terms', true, termsToSend, null],
-        });
-      }
+      await browser.scripting.executeScript({
+        target: {tabId: tab.id},
+        func: clarity,
+        args: ['terms', null],
+      });
       break;
     case 'privacy_summary_privacy_policy':
-      {
-        let privacyToSend: string[] = [];
-        const privacy = await browser.storage.sync.get('privacy');
-        if (privacy?.privacy) {
-          privacyToSend = privacy?.privacy;
-        }
-        await browser.scripting.executeScript({
-          target: {tabId: tab.id},
-          func: clarity,
-          args: ['privacy', true, privacyToSend, null],
-        });
-      }
+      await browser.scripting.executeScript({
+        target: {tabId: tab.id},
+        func: clarity,
+        args: ['privacy', null],
+      });
       break;
     default:
       break;

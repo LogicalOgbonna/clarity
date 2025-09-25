@@ -1,17 +1,4 @@
-import {browser} from 'webextension-polyfill-ts';
 import clarity from '../clarity';
-
-type PrivacyLink = {
-  privacy: Array<{
-    [key: string]: string;
-  }>;
-};
-
-type TermsLink = {
-  terms: Array<{
-    [key: string]: string;
-  }>;
-};
 
 class Scrapper {
   public static DEFAULT_KEYWORDS = {
@@ -19,13 +6,8 @@ class Scrapper {
     privacy: ['privacy', 'privacy policy', 'privacy notice'],
   };
 
-  public static getCurrentUrl = (): {
-    hostname: string;
-    host: string;
-    pathname: string;
-  } => {
-    const {hostname, host, pathname} = new URL(window.location.href);
-    return {hostname: hostname.replace('www.', ''), host, pathname};
+  public static getCurrentUrl = (): URL => {
+    return new URL(window.location.href);
   };
 
   public static isValidUrl = (url: string): boolean => {
@@ -42,68 +24,39 @@ class Scrapper {
     terms: HTMLAnchorElement[];
     privacy: HTMLAnchorElement[];
   }> => {
-    const {hostname} = this.getCurrentUrl();
-    const {privacy}: PrivacyLink = (await browser.storage.sync.get(
-      'privacy'
-    )) as PrivacyLink;
-
-    const {terms}: TermsLink = (await browser.storage.sync.get(
-      'terms'
-    )) as TermsLink;
-    const privacyServerLink = privacy?.[
-      hostname as keyof typeof privacy
-    ] as unknown as string | undefined;
-    const termsServerLink = terms?.[
-      hostname as keyof typeof terms
-    ] as unknown as string | undefined;
-
     const aTags = document.querySelectorAll('a[href]');
     const foundTerms: HTMLAnchorElement[] = [];
     const foundPrivacy: HTMLAnchorElement[] = [];
 
-    // First, try to find links using server-provided URLs
-    if (privacyServerLink || termsServerLink) {
-      Array.from(aTags).forEach((value: Element) => {
-        const {href} = value as HTMLAnchorElement;
-        if (privacyServerLink && href.includes(privacyServerLink)) {
-          foundPrivacy.push(value as HTMLAnchorElement);
-        }
-        if (termsServerLink && href.includes(termsServerLink)) {
-          foundTerms.push(value as HTMLAnchorElement);
-        }
-      });
-    }
+    // Find links using keyword-based detection
+    Array.from(aTags).forEach((value: Element) => {
+      const element = value as HTMLAnchorElement;
+      const {href, textContent} = element;
+      const linkText = textContent?.toLowerCase() || '';
+      const hrefLower = href.toLowerCase();
 
-    // If no server links found or no matches, fall back to keyword matching
-    if (foundTerms.length === 0 && foundPrivacy.length === 0) {
-      Array.from(aTags).forEach((value: Element) => {
-        const anchor = value as HTMLAnchorElement;
-        const textContent = anchor.textContent?.toLowerCase() || '';
-        const href = anchor.href?.toLowerCase() || '';
+      // Check for privacy policy links
+      if (
+        this.DEFAULT_KEYWORDS.privacy.some(
+          (keyword) =>
+            linkText.includes(keyword) ||
+            hrefLower.includes(keyword.replace(/\s+/g, '-'))
+        )
+      ) {
+        foundPrivacy.push(element);
+      }
 
-        // Check for terms keywords
-        for (const keyword of this.DEFAULT_KEYWORDS.terms) {
-          if (
-            textContent.includes(keyword.toLowerCase()) ||
-            href.includes(keyword.toLowerCase())
-          ) {
-            foundTerms.push(anchor);
-            break;
-          }
-        }
-
-        // Check for privacy keywords
-        for (const keyword of this.DEFAULT_KEYWORDS.privacy) {
-          if (
-            textContent.includes(keyword.toLowerCase()) ||
-            href.includes(keyword.toLowerCase())
-          ) {
-            foundPrivacy.push(anchor);
-            break;
-          }
-        }
-      });
-    }
+      // Check for terms of service links
+      if (
+        this.DEFAULT_KEYWORDS.terms.some(
+          (keyword) =>
+            linkText.includes(keyword) ||
+            hrefLower.includes(keyword.replace(/\s+/g, '-'))
+        )
+      ) {
+        foundTerms.push(element);
+      }
+    });
 
     return {
       terms: foundTerms,
@@ -207,7 +160,7 @@ class Scrapper {
           const link = element.href;
 
           // Call clarity function with 'terms' category and the link
-          clarity('terms', false, undefined, link);
+          clarity('terms', link);
         } catch (error) {
           console.error('Error calling clarity for terms:', error);
         }
@@ -230,7 +183,7 @@ class Scrapper {
           const link = element.href;
 
           // Call clarity function with 'privacy' category and the link
-          clarity('privacy', false, undefined, link);
+          clarity('privacy', link);
         } catch (error) {
           console.error('Error calling clarity for privacy:', error);
         }
