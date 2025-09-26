@@ -1,7 +1,127 @@
+import {browser} from 'webextension-polyfill-ts';
 import Scrapper from '../common/scrapper';
 import {Policy} from '../common/types/index.d';
 
 const API_URL = 'http://localhost:3000/api';
+
+// Chat history caching utilities
+const getUserId = async (): Promise<string | null> => {
+  try {
+    const result = await browser.storage.sync.get('clarityUserId');
+    return result.clarityUserId || null;
+  } catch (error) {
+    console.error('Error getting user ID:', error);
+    return null;
+  }
+};
+
+const isCacheValid = (cachedData: string): boolean => {
+  try {
+    const data = JSON.parse(cachedData);
+    const cacheTime = data.cachedAt;
+    const now = Date.now();
+    const maxAge = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
+    return now - cacheTime < maxAge;
+  } catch {
+    return false;
+  }
+};
+
+const initializeChatHistory = async (): Promise<void> => {
+  const userId = await getUserId();
+  if (!userId) {
+    console.log('No user ID found, skipping chat history initialization');
+    return;
+  }
+
+  const cacheKey = `user_chats_${userId}`;
+
+  // Check if we have valid cached data in localStorage
+  const cachedData = localStorage.getItem(cacheKey);
+  if (cachedData && isCacheValid(cachedData)) {
+    console.log('Using cached chat history from localStorage');
+    return;
+  }
+
+  // No valid cache found, fetch from API and store in localStorage
+  try {
+    console.log('No valid cache found, fetching chat history from API...');
+    const response = await fetch(
+      `${API_URL}/chat/history/${userId}?page=1&limit=50`
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      // Extract chats array from the response and store with timestamp
+      const dataWithTimestamp = {
+        chats: data.chats || [],
+        pagination: data.pagination || null,
+        status: data.status || 'success',
+        cachedAt: Date.now(),
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(dataWithTimestamp));
+      console.log('Chat history fetched and cached in localStorage');
+    } else {
+      console.error('Failed to fetch chat history:', response.status);
+      // Initialize with empty array if fetch fails
+      const emptyData = {
+        chats: [],
+        pagination: null,
+        status: 'error',
+        cachedAt: Date.now(),
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(emptyData));
+    }
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    // Initialize with empty array if fetch fails
+    const emptyData = {
+      chats: [],
+      pagination: null,
+      status: 'error',
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(emptyData));
+  }
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const addNewChatToHistory = async (newChat: any): Promise<void> => {
+  const userId = await getUserId();
+  if (!userId) return;
+
+  const cacheKey = `user_chats_${userId}`;
+  const cachedData = localStorage.getItem(cacheKey);
+
+  if (cachedData) {
+    try {
+      const data = JSON.parse(cachedData);
+      // Add new chat to the top of the array
+      data.chats.unshift(newChat);
+
+      // Keep only last 50 chats
+      if (data.chats.length > 50) {
+        data.chats = data.chats.slice(0, 50);
+      }
+
+      data.cachedAt = Date.now(); // Update cache timestamp
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+      console.log('New chat added to history cache');
+    } catch (error) {
+      console.error('Error updating chat history cache:', error);
+    }
+  } else {
+    // If no cache exists, initialize with the new chat
+    const newData = {
+      chats: [newChat],
+      pagination: null,
+      status: 'success',
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(newData));
+    console.log('Initialized chat history cache with new chat');
+  }
+};
 
 let observer: MutationObserver | null = null;
 let isProcessing = false;
@@ -137,6 +257,9 @@ const main = async (): Promise<void> => {
   const {hostname} = Scrapper.getCurrentUrl();
   currentDomain = hostname;
 
+  // Initialize chat history (hybrid approach)
+  await initializeChatHistory();
+
   // Initial attempt
   await processElements();
 
@@ -182,6 +305,15 @@ const checkForNavigation = (): void => {
 // Check for navigation every 2 seconds
 setInterval(checkForNavigation, 2000);
 
+// Listen for messages from clarity module
+window.addEventListener('message', async (event) => {
+  if (event.source !== window) return;
+
+  if (event.data.type === 'ADD_CHAT_TO_HISTORY') {
+    await addNewChatToHistory(event.data.chat);
+  }
+});
+
 // Wait for DOM to be ready before running
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', main);
@@ -196,4 +328,5 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-export {};
+// Export functions for use in other parts of the extension
+export {addNewChatToHistory, initializeChatHistory};
