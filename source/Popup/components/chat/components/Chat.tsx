@@ -8,7 +8,34 @@ interface ChatProps {
   onBack?: () => void;
 }
 
+declare const Translator: {
+  availability({
+    sourceLanguage,
+    targetLanguage,
+    monitor,
+  }: {
+    sourceLanguage: string;
+    targetLanguage: string;
+    monitor: (m: EventTarget) => void;
+  }): Promise<string>;
+  create({
+    sourceLanguage,
+    targetLanguage,
+  }: {
+    sourceLanguage: string;
+    targetLanguage: string;
+  }): Promise<{translate: (text: string) => Promise<string>}>;
+};
+
+declare const self: {
+  Translator: typeof Translator;
+};
+
 export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
+  const [currentSourceLanguage, setCurrentSourceLanguage] = React.useState<
+    Record<string, string>
+  >({});
+
   const [inputValue, setInputValue] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [messages, setMessages] = React.useState<Message[]>(
@@ -58,15 +85,57 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     }
   };
 
+  const handleTranslateMessage = async (
+    messageId: string,
+    targetLanguage: string,
+    sourceLanguage: string
+  ): Promise<void> => {
+    if (!targetLanguage || !sourceLanguage) return;
+    if (!self.Translator) return;
+    const messageIndex = messages.findIndex((m) => m.id === messageId);
+    if (messageIndex === -1) return;
+    const message = messages[messageIndex];
+    const availability = await self.Translator.availability({
+      sourceLanguage,
+      targetLanguage,
+      monitor: (m) => {
+        console.log('Translator availability:', m);
+      },
+    });
+    console.log('🚀 ~ handleTranslateMessage ~ availability:', availability);
+    if (message && availability !== 'unavailable') {
+      setCurrentSourceLanguage({
+        ...currentSourceLanguage,
+        [messageId]: targetLanguage,
+      });
+      await self.Translator.create({
+        sourceLanguage,
+        targetLanguage,
+      }).then((translator) => {
+        translator
+          .translate(message.parts.map((part) => part.text).join(''))
+          .then((translatedText) => {
+            message.parts = [{text: translatedText, type: 'text'}];
+            messages[messageIndex] = message;
+            setMessages([...messages]);
+          });
+      });
+    }
+  };
+
   const renderLanguageSelector = (messageId: string): React.ReactElement => {
     return (
       <div className="language-selector">
         <select
           className="translate-selector"
+          value={currentSourceLanguage[messageId] ?? 'en'}
           data-message-id={messageId}
           onChange={(e) => {
-            // TODO: Implement translation functionality
-            console.log('Language selected:', e.target.value);
+            handleTranslateMessage(
+              messageId,
+              e.target.value,
+              currentSourceLanguage[messageId] ?? 'en'
+            );
           }}
         >
           <option value="">🌐 Translate</option>

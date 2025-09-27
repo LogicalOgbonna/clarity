@@ -10,7 +10,6 @@ export const ChatListItem: React.FC<ChatProps> = ({
   const {title, createdAt, id} = chat;
   const titleToDisplay = title.length > 28 ? `${title.slice(0, 28)}...` : title;
   const needsTooltip = title.length > 28;
-  const hostname = id.split('_')[0] || 'Unknown';
   return (
     <div
       key={id}
@@ -33,7 +32,6 @@ export const ChatListItem: React.FC<ChatProps> = ({
           <span className="chat-time">
             {formatTimestamp(new Date(createdAt).getTime())}
           </span>
-          <span className="chat-domain">{hostname}</span>
         </div>
       </div>
       <button

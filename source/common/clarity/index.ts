@@ -100,37 +100,37 @@ const clarity = (category: string, externalLink?: string): void => {
     const languageSelector = (id: string): string =>
       `
       <select class="translate-selector" id="select-${id}" data-message-id="${id}" style="
-        padding: 4px 8px 4px 4px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        background-color: white;
-        font-size: 12px;
-        color: #666;
-        cursor: pointer;
-        outline: none;
-        transition: border-color 0.2s;
-      " onfocus="this.style.borderColor='#FF4A4A'" onblur="this.style.borderColor='#e0e0e0'">
-        <option value="">🌐 Translate</option>
-        <option value="en">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</option>
-        <option value="es">🇪🇸 Spanish</option>
-        <option value="fr">🇫🇷 French</option>
-        <option value="de">🇩🇪 German</option>
-        <option value="it">🇮🇹 Italian</option>
-        <option value="pt">🇵🇹 Portuguese</option>
-        <option value="ru">🇷🇺 Russian</option>
-        <option value="ja">🇯🇵 Japanese</option>
-        <option value="ko">🇰🇷 Korean</option>
-        <option value="zh">🇨🇳 Chinese</option>
-        <option value="ar">🇸🇦 Arabic</option>
-        <option value="hi">🇮🇳 Hindi</option>
-        <option value="nl">🇳🇱 Dutch</option>
-        <option value="sv">🇸🇪 Swedish</option>
-        <option value="no">🇳🇴 Norwegian</option>
-        <option value="da">🇩🇰 Danish</option>
-        <option value="fi">🇫🇮 Finnish</option>
-        <option value="pl">🇵🇱 Polish</option>
-        <option value="tr">🇹🇷 Turkish</option>
-        <option value="th">🇹🇭 Thai</option>
+              padding: 4px 8px 4px 4px;
+              border: 1px solid #e0e0e0;
+              border-radius: 6px;
+              background-color: white;
+              font-size: 12px;
+              color: #666;
+              cursor: pointer;
+              outline: none;
+              transition: border-color 0.2s;
+            " onfocus="this.style.borderColor='#FF4A4A'" onblur="this.style.borderColor='#e0e0e0'">
+              <option value="">🌐 Translate</option>
+              <option value="en">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</option>
+              <option value="es">🇪🇸 Spanish</option>
+              <option value="fr">🇫🇷 French</option>
+              <option value="de">🇩🇪 German</option>
+              <option value="it">🇮🇹 Italian</option>
+              <option value="pt">🇵🇹 Portuguese</option>
+              <option value="ru">🇷🇺 Russian</option>
+              <option value="ja">🇯🇵 Japanese</option>
+              <option value="ko">🇰🇷 Korean</option>
+              <option value="zh">🇨🇳 Chinese</option>
+              <option value="ar">🇸🇦 Arabic</option>
+              <option value="hi">🇮🇳 Hindi</option>
+              <option value="nl">🇳🇱 Dutch</option>
+              <option value="sv">🇸🇪 Swedish</option>
+              <option value="no">🇳🇴 Norwegian</option>
+              <option value="da">🇩🇰 Danish</option>
+              <option value="fi">🇫🇮 Finnish</option>
+              <option value="pl">🇵🇱 Polish</option>
+              <option value="tr">🇹🇷 Turkish</option>
+              <option value="th">🇹🇭 Thai</option>
       </select>
     `;
 
@@ -159,13 +159,13 @@ const clarity = (category: string, externalLink?: string): void => {
         translationNode = document.createElement('div');
         translationNode.id = 'translation-node';
         translationNode.style.cssText = `
-          font-size: 12px;
-          color: #666;
-          font-style: italic;
-          margin-top: 8px;
-          padding-top: 8px;
-          border-top: 1px solid #e0e0e0;
-        `;
+       font-size: 12px;
+       color: #666;
+       font-style: italic;
+       margin-top: 8px;
+       padding-top: 8px;
+       border-top: 1px solid #e0e0e0;
+     `;
         messageElement.appendChild(translationNode);
       }
 
@@ -401,7 +401,7 @@ const clarity = (category: string, externalLink?: string): void => {
     const getChatHistory = (): Array<Chat> => {
       const history = localStorage.getItem(cacheKey);
       const parsedHistory = history ? JSON.parse(history) : [];
-      return parsedHistory.chats.sort((a: Chat, b: Chat) => {
+      return parsedHistory.chats?.sort((a: Chat, b: Chat) => {
         return (
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
@@ -542,44 +542,44 @@ const clarity = (category: string, externalLink?: string): void => {
      */
 
     const chatHeader = `
-     <!-- Header -->
+    <!-- Header -->
+    <div style="
+      padding: 16px 16px 12px 16px; 
+      border-bottom: 1px solid #f0f0f0; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background-color: white;
+    ">
+      <div style="display: flex; align-items: center; gap: 8px;">
         <div style="
-          padding: 16px 16px 12px 16px; 
-          border-bottom: 1px solid #f0f0f0; 
+          width: 24px; 
+          height: 24px; 
+          background: linear-gradient(135deg, #FF4A4A, #FF6B6B); 
+          border-radius: 6px; 
           display: flex; 
-          justify-content: space-between; 
           align-items: center; 
-          background-color: white;
-        ">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="
-              width: 24px; 
-              height: 24px; 
-              background: linear-gradient(135deg, #FF4A4A, #FF6B6B); 
-              border-radius: 6px; 
-              display: flex; 
-              align-items: center; 
-              justify-content: center;
-              color: white;
-              font-size: 12px;
-              font-weight: 600;
-            ">C</div>
-            <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #FF4A4A; letter-spacing: -0.15px;">Clarity</h3>
-          </div>
-          <button id="close-chat-btn" style="
-            background: none; 
-            border: none; 
-            font-size: 24px; 
-            cursor: pointer; 
-            color: #666; 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            transition: background-color 0.2s;
-          " onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
+          justify-content: center;
+          color: white;
+          font-size: 12px;
+          font-weight: 600;
+        ">C</div>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #FF4A4A; letter-spacing: -0.15px;">Clarity</h3>
+      </div>
+      <button id="close-chat-btn" style="
+        background: none; 
+        border: none; 
+        font-size: 24px; 
+        cursor: pointer; 
+        color: #666; 
+        width: 32px; 
+        height: 32px; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
         </div>`;
 
     const appDrawer = `
@@ -698,58 +698,58 @@ const clarity = (category: string, externalLink?: string): void => {
         </div>`;
 
     const footer = `
-        <!-- Input Area -->
-        <div style="
-          padding: 16px; 
-          border-top: 1px solid #f0f0f0; 
-          background-color: white;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        ">
+    <!-- Input Area -->
+    <div style="
+      padding: 16px; 
+      border-top: 1px solid #f0f0f0; 
+      background-color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    ">
           <button id="hamburger-menu-btn" style="
-            background-color: #f5f5f5; 
-            border: none; 
-            border-radius: 12px; 
-            width: 40px; 
-            height: 40px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            transition: background-color 0.2s;
-          " onmouseover="this.style.backgroundColor='#e0e0e0'" onmouseout="this.style.backgroundColor='#f5f5f5'">
-            <span style="font-size: 18px; color: #333;">☰</span>
-          </button>
-          <input type="text" id="chat-input" placeholder="Ask me anything..." style="
-            flex-grow: 1; 
-            padding: 12px 16px; 
-            border-radius: 24px; 
-            border: 1px solid #e0e0e0; 
-            outline: none; 
-            font-size: 16px;
-            font-family: 'Urbanist', sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            transition: all 0.2s;
-          " onfocus="this.style.borderColor='#FF4A4A'; this.style.backgroundColor='white'" onblur="this.style.borderColor='#e0e0e0'; this.style.backgroundColor='#f9f9f9'">
-          <button id="chat-send-btn" style="
-            background-color: #FF4A4A; 
-            color: white; 
-            border: none; 
-            border-radius: 50%; 
-            width: 40px; 
-            height: 40px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            transition: background-color 0.2s;
-          " onmouseover="this.style.backgroundColor='#e63939'" onmouseout="this.style.backgroundColor='#FF4A4A'">
-            <span style="font-size: 16px;">→</span>
-          </button>
-        </div>
-        `;
+        background-color: #f5f5f5; 
+        border: none; 
+        border-radius: 12px; 
+        width: 40px; 
+        height: 40px; 
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#e0e0e0'" onmouseout="this.style.backgroundColor='#f5f5f5'">
+        <span style="font-size: 18px; color: #333;">☰</span>
+      </button>
+      <input type="text" id="chat-input" placeholder="Ask me anything..." style="
+        flex-grow: 1; 
+        padding: 12px 16px; 
+        border-radius: 24px; 
+        border: 1px solid #e0e0e0; 
+        outline: none; 
+        font-size: 16px;
+        font-family: 'Urbanist', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+        transition: all 0.2s;
+      " onfocus="this.style.borderColor='#FF4A4A'; this.style.backgroundColor='white'" onblur="this.style.borderColor='#e0e0e0'; this.style.backgroundColor='#f9f9f9'">
+      <button id="chat-send-btn" style="
+        background-color: #FF4A4A; 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        width: 40px; 
+        height: 40px; 
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#e63939'" onmouseout="this.style.backgroundColor='#FF4A4A'">
+        <span style="font-size: 16px;">→</span>
+      </button>
+    </div>
+  `;
     const generateUserMessage = (content: string): string => {
       return `
         <div style="
@@ -1381,27 +1381,27 @@ const clarity = (category: string, externalLink?: string): void => {
     // Create AI response bubble with loading state
     const responseMessage = document.createElement('div');
     responseMessage.style.cssText = `
-        background-color: #f0f0f0; 
-        padding: 12px 16px; 
-        border-radius: 16px 16px 16px 4px; 
-        max-width: 90%; 
-        align-self: flex-start;
-        font-size: 14px;
-        line-height: 24px;
-        color: #333;
-        margin-bottom: 16px;
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        text-align: left;
-      `;
+    background-color: #f0f0f0; 
+    padding: 12px 16px; 
+    border-radius: 16px 16px 16px 4px; 
+    max-width: 90%; 
+    align-self: flex-start;
+    font-size: 14px;
+    line-height: 24px;
+    color: #333;
+    margin-bottom: 16px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+  `;
 
     // Add typing indicator
     const typingIndicator = document.createElement('div');
     typingIndicator.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    `;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  `;
     typingIndicator.innerHTML = `
     <span>Thinking</span>
     <div style="display: flex; gap: 2px;">
@@ -1420,10 +1420,10 @@ const clarity = (category: string, externalLink?: string): void => {
       const style = document.createElement('style');
       style.id = 'typing-animation';
       style.textContent = `
-      @keyframes typing {
-        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-        30% { transform: translateY(-10px); opacity: 1; }
-      }
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-10px); opacity: 1; }
+    }
   `;
       document.head.appendChild(style);
     }
