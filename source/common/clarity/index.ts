@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 // Note: Chat history will be handled via message passing to avoid isolation issues
 
 // Declare Summarizer as a global object
@@ -99,7 +100,7 @@ const clarity = (category: string, externalLink?: string): void => {
      */
     const languageSelector = (id: string): string =>
       `
-      <select class="translate-selector" id="select-${id}" data-message-id="${id}" style="
+      <select class="translate-selector" value="${messageLanguageState.get(id) || 'en'}" id="select-${id}" data-message-id="${id}" style="
               padding: 4px 8px 4px 4px;
               border: 1px solid #e0e0e0;
               border-radius: 6px;
@@ -284,6 +285,26 @@ const clarity = (category: string, externalLink?: string): void => {
       const drawer = document.getElementById('history-drawer');
       const overlay = document.getElementById('drawer-overlay');
 
+      const historyItem = document.querySelector(
+        `.history-item[data-chat-id="${chatId}"]`
+      );
+      if (historyItem) {
+        historyItem.setAttribute('data-active', 'true');
+        (historyItem as HTMLElement).style.backgroundColor = '#FF4A4A';
+        const titleEl = historyItem.querySelector(
+          '.history_item_text'
+        ) as HTMLElement;
+        const timestampEl = historyItem.querySelector(
+          'div[style*="font-size: 12px"]'
+        ) as HTMLElement;
+        const deleteBtn = historyItem.querySelector(
+          '.delete-btn'
+        ) as HTMLElement;
+        if (titleEl) titleEl.style.color = 'white';
+        if (timestampEl) timestampEl.style.color = 'rgba(255, 255, 255, 0.8)';
+        if (deleteBtn) deleteBtn.style.color = 'rgba(255, 255, 255, 0.8)';
+      }
+
       if (drawer && overlay) {
         const isVisible = drawer.style.transform !== 'translateX(-100%)';
 
@@ -309,8 +330,7 @@ const clarity = (category: string, externalLink?: string): void => {
     const renderHistoryList = (history: Array<Chat>): string => {
       if (history.length > 0) {
         return history
-          .slice()
-          .reverse()
+          ?.slice()
           .map((chat) => {
             const titleToDisplay =
               chat.title.length > 35
@@ -327,17 +347,16 @@ const clarity = (category: string, externalLink?: string): void => {
              gap: 4px;
              position: relative;
            " onmouseover="
-              this.style.backgroundColor='#f5f5f5';
               const tooltip = this.querySelector('.tooltiptext'); 
              if(tooltip) { tooltip.style.visibility='visible'; 
              tooltip.style.opacity='1';}
             " 
-            onmouseout="this.style.backgroundColor='transparent';
+            onmouseout="
             const tooltip = this.querySelector('.tooltiptext'); 
             if(tooltip) { tooltip.style.visibility='hidden'; 
             tooltip.style.opacity='0';}
             ">
-             <div class="tooltip" data-tooltip-id="${chat.id}" style="
+             <div class="history_item_text" data-tooltip-id="${chat.id}" style="
                font-size: 14px;
                color: #333;
                line-height: 1.4;
@@ -847,6 +866,38 @@ const clarity = (category: string, externalLink?: string): void => {
       `;
     };
 
+    const loadChatFromHistory = (newChatId: string): string | null => {
+      const chat = getChatHistory().find((c) => c.id === newChatId);
+      if (chat) {
+        const contentTxt = chat.messages
+          .map((message) => {
+            if (message.role === 'user') {
+              return generateUserMessage(
+                message.parts.map((part) => part.text).join('')
+              );
+            }
+            return generateResponseMessage({
+              content: message.parts.map((part) => part.text).join(''),
+              id: message.id,
+            });
+          })
+          .join('');
+        closeHistoryDrawer(); // Close the drawer after loading
+        showChatUI(contentTxt);
+        attachEventListenersToTranslateSelector(chat.messages);
+        return contentTxt;
+      }
+
+      closeHistoryDrawer(); // Close the drawer after loading
+      showChatUI(
+        generateResponseMessage({
+          content: 'Could not find chat in history',
+          id: 'error_find_chat_in_history',
+        })
+      );
+      return null;
+    };
+
     const showChatUI = (content: string): void => {
       let chatUI = document.getElementById('tos-gpt-chat-ui');
 
@@ -1013,48 +1064,6 @@ const clarity = (category: string, externalLink?: string): void => {
           });
       };
 
-      // Load chat from history
-      // TODO: Simplify and possible extract outside of showChatUI
-      const loadChatFromHistory = (newChatId: string): string | null => {
-        const chat = getChatHistory().find((c) => c.id === newChatId);
-        if (chat) {
-          const contentTxt = chat.messages
-            .map((message) => {
-              if (message.role === 'user') {
-                return generateUserMessage(
-                  message.parts.map((part) => part.text).join('')
-                );
-              }
-              return generateResponseMessage({
-                content: message.parts.map((part) => part.text).join(''),
-                id: message.id,
-              });
-            })
-            .join('');
-          closeHistoryDrawer(); // Close the drawer after loading
-          showChatUI(contentTxt);
-          attachEventListenersToTranslateSelector(chat.messages);
-          return contentTxt;
-        }
-
-        closeHistoryDrawer(); // Close the drawer after loading
-        showChatUI(
-          generateResponseMessage({
-            content: 'Could not find chat in history',
-            id: 'error_find_chat_in_history',
-          })
-        );
-        return null;
-      };
-
-      // Delete chat from history
-
-      // Attach event listeners to the history list
-      attachHistoryEventListeners({
-        loadChatFromHistory,
-        deleteChatFromHistory,
-      });
-
       if (!chatUI) {
         // Add Urbanist font
         const fontLink = document.createElement('link');
@@ -1216,6 +1225,10 @@ const clarity = (category: string, externalLink?: string): void => {
             const historyList = document.getElementById('history-list');
             if (historyList) {
               historyList.innerHTML = history;
+              attachHistoryEventListeners({
+                loadChatFromHistory,
+                deleteChatFromHistory,
+              });
             }
           }
 
@@ -1310,7 +1323,7 @@ const clarity = (category: string, externalLink?: string): void => {
     if (!internalLink) {
       showChatUI(
         generateResponseMessage({
-          content: `Could not find a link for ${category} of ${hostname}.`,
+          content: `<p style="color: red;">Could not find a link for ${category} of ${hostname}.</p>`,
           id: 'error_find_link',
         })
       );
@@ -1340,7 +1353,7 @@ const clarity = (category: string, externalLink?: string): void => {
 
       showChatUI(
         generateResponseMessage({
-          content: 'Could not find chat in history.',
+          content: `<p style="color: red;">Could not find chat in history.</p>`,
           id: 'error_find_chat_in_history',
         })
       );
@@ -1353,7 +1366,7 @@ const clarity = (category: string, externalLink?: string): void => {
     if (!chatContent) {
       showChatUI(
         generateResponseMessage({
-          content: 'Could not find chat content',
+          content: `<p style="color: red;">Could not find chat content</p>`,
           id: 'error_find_chat_content',
         })
       );

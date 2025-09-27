@@ -2,6 +2,7 @@ import clarity from '../clarity';
 
 class Scrapper {
   public static DEFAULT_KEYWORDS = {
+    // TODO: Add more keywords and more other policies
     terms: ['terms', 'terms of service', 'terms of use', 'terms of conditions'],
     privacy: ['privacy', 'privacy policy', 'privacy notice'],
   };
