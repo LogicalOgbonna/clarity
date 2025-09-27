@@ -59,6 +59,18 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
 
     setIsLoading(true);
 
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        id: `user_message_${new Date().getTime()}`,
+        role: 'user',
+        parts: [{text: inputValue, type: 'text'}],
+        createdAt: new Date().toISOString(),
+        chatId: chat.id,
+        attachments: [],
+      },
+    ]);
+
     const response = await fetch(`${CLARITY_API_URL}/chat/${chat.id}`, {
       method: 'POST',
       headers: {
@@ -69,8 +81,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
 
     if (response.ok) {
       const data = await response.json();
-      console.log('🚀 ~ handleSendMessage ~ data:', data);
-      setMessages([...messages, data.chat]);
+      setMessages((prevMessages) => [...prevMessages, data.chat]);
       setIsLoading(false);
       setInputValue('');
     } else {
@@ -173,14 +184,16 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: content}}
         />
+        <div
+          className={`message-time ${isUser ? 'message-time-user' : 'message-time-assistant'}`}
+        >
+          {formatTimestamp(new Date(message.createdAt).getTime())}
+        </div>
         {!isUser && (
           <div className="message-actions">
             {renderLanguageSelector(message.id)}
           </div>
         )}
-        <div className="message-time">
-          {formatTimestamp(new Date(message.createdAt).getTime())}
-        </div>
       </div>
     );
   };

@@ -1,183 +1,164 @@
-<h1 align="center">🚀 web-extension-starter</h1>
-<p align="center">Web Extension starter to build "Write Once Run on Any Browser" extension</p>
-<p align="center">Update: Rewrite in progress to support manifest v3 / Vite.js: https://github.com/abhijithvijayan/web-extension-starter/tree/vite-rewrite</p>
-<div align="center">
-  <a href="https://david-dm.org/abhijithvijayan/web-extension-starter">
-    <img src="https://img.shields.io/david/abhijithvijayan/web-extension-starter.svg?colorB=orange" alt="DEPENDENCIES" />
-  </a>
-  <a href="https://github.com/abhijithvijayan/web-extension-starter/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/abhijithvijayan/web-extension-starter.svg" alt="LICENSE" />
-  </a>
-  <a href="https://twitter.com/intent/tweet?text=Check%20out%20web-extension-starter%21%20by%20%40_abhijithv%0A%0AWeb%20Extension%20starter%20to%20build%20%22Write%20Once%20Run%20on%20Any%20Browser%22%20extension.%20https%3A%2F%2Fgithub.com%2Fabhijithvijayan%2Fweb-extension-starter%0A%0A%23javascript%20%23react%20%23typescript%20%23sass%20%23webextension%20%23chrome%20%23firefox%20%23opera">
-     <img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social" alt="TWEET" />
-  </a>
-</div>
-<h3 align="center">🙋‍♂️ Made by <a href="https://twitter.com/_abhijithv">@abhijithvijayan</a></h3>
-<p align="center">
-  Donate:
-  <a href="https://www.paypal.me/iamabhijithvijayan" target='_blank'><i><b>PayPal</b></i></a>,
-  <a href="https://www.patreon.com/abhijithvijayan" target='_blank'><i><b>Patreon</b></i></a>
-</p>
-<p align="center">
-  <a href='https://www.buymeacoffee.com/abhijithvijayan' target='_blank'>
-    <img height='36' style='border:0px;height:36px;' src='https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png' border='0' alt='Buy Me a Coffee' />
-  </a>
-</p>
-<hr />
+# Clarity - AI-Powered Terms of Service Analyzer
 
-Update: Rewrite to use Vite + React in progress in https://github.com/abhijithvijayan/web-extension-starter/tree/vite-rewrite branch
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-17.0.2-blue)](https://reactjs.org/)
 
-❤️ it? ⭐️ it on [GitHub](https://github.com/abhijithvijayan/web-extension-starter) or [Tweet](https://twitter.com/intent/tweet?text=Check%20out%20web-extension-starter%21%20by%20%40_abhijithv%0A%0AWeb%20Extension%20starter%20to%20build%20%22Write%20Once%20Run%20on%20Any%20Browser%22%20extension.%20https%3A%2F%2Fgithub.com%2Fabhijithvijayan%2Fweb-extension-starter%0A%0A%23javascript%20%23react%20%23typescript%20%23sass%20%23webextension%20%23chrome%20%23firefox%20%23opera) about it.
+Clarity is a powerful browser extension that helps users understand complex Terms of Service and Privacy Policy documents through AI-powered analysis and summarization. Built with React, TypeScript, and modern web technologies, it provides instant insights into legal documents across multiple languages.
 
-🧙‍♂️ **React + TypeScript** = [This](https://github.com/abhijithvijayan/web-extension-starter/tree/react-typescript) branch
+## ✨ Features
 
-😨 **React + JavaScript** = Checkout [react-javascript](https://github.com/abhijithvijayan/web-extension-starter/tree/react-javascript) branch
+- **📄 Terms Analysis**: Automatically analyze Terms of Service and Privacy Policy documents
+- **🔍 Instant Summaries**: Get AI-powered summaries of complex legal text
+- **🌐 Multi-language Support**: Translate and analyze documents in multiple languages
+- **💾 Chat History**: Save and manage your analysis history
+- **🎯 Smart Detection**: Automatically detect policy documents on web pages
+- **⚡ Real-time Processing**: Fast, efficient document processing
+- **🔒 Privacy-Focused**: Local processing with optional cloud integration
 
-👶🏼 **HTML + JavaScript** = Checkout [master](https://github.com/abhijithvijayan/web-extension-starter/tree/master) branch
+## 🚀 Installation
 
-## Features
+### Development Setup
 
-- Cross Browser Support (Web-Extensions API)
-- Browser Tailored Manifest generation
-- Automatic build on code changes
-- Auto packs browser specific build files
-- SASS styling
-- TypeScript by default
-- ES6 modules support
-- React UI Library by default
-- Smart reload
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/terms-of-use-extension.git
+   cd terms-of-use-extension
+   ```
 
-## Browser Support
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-| [![Chrome](https://raw.github.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)](/) | [![Firefox](https://raw.github.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)](/) | [![Opera](https://raw.github.com/alrra/browser-logos/master/src/opera/opera_48x48.png)](/) | [![Edge](https://raw.github.com/alrra/browser-logos/master/src/edge/edge_48x48.png)](/) | [![Yandex](https://raw.github.com/alrra/browser-logos/master/src/yandex/yandex_48x48.png)](/) | [![Brave](https://raw.github.com/alrra/browser-logos/master/src/brave/brave_48x48.png)](/) | [![vivaldi](https://raw.github.com/alrra/browser-logos/master/src/vivaldi/vivaldi_48x48.png)](/) |
-| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| 49 & later ✔                                                                                  | 52 & later ✔                                                                                     | 36 & later ✔                                                                               | 79 & later ✔                                                                            | Latest ✔                                                                                      | Latest ✔                                                                                   | Latest ✔                                                                                         |
+3. **Build the extension**
+   ```bash
+   # For Chrome
+   npm run build:chrome
+   
+   # For Firefox
+   npm run build:firefox
+   
+   # For Opera
+   npm run build:opera
+   
+   # Build for all browsers
+   npm run build
+   ```
 
-## Used by extensions in production that has over 100,000+ users.
+4. **Load the extension in your browser**
+   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", and select the `extension/chrome` folder
+   - **Firefox**: Go to `about:debugging`, click "This Firefox", click "Load Temporary Add-on", and select the `extension/firefox` folder
+   - **Opera**: Go to `opera://extensions/`, enable "Developer mode", click "Load unpacked", and select the `extension/opera` folder
 
-- [daily.dev](https://daily.dev) in [daily.dev extension](https://r.daily.dev/get)
-- [Jiffy Reader](https://chrome.google.com/webstore/detail/jiffy-reader/lljedihjnnjjefafchaljkhbpfhfkdic) in [ansh/jiffyreader.com](https://github.com/ansh/jiffyreader.com)
-- [kutt-extension](https://chrome.google.com/webstore/detail/kutt/pklakpjfiegjacoppcodencchehlfnpd) in [abhijithvijayan/kutt-extension](https://github.com/abhijithvijayan/kutt-extension)
-- [doubanIMDb](https://chrome.google.com/webstore/detail/doubanimdb/nfibbjnhkbjlgjaojglmmibdjicidini) in [lisongx/doubanIMDb](https://github.com/lisongx/doubanIMDb)
-- [Mooc Assistant](https://chrome.google.com/webstore/detail/mooc-assistant/oebggekgendmoeedkkdkdcdbmfbfeldc) in [unbyte/mooc-assistant](https://github.com/unbyte/mooc-assistant)
-- ArtiPub in [crawlab-team/artipub](https://github.com/crawlab-team/artipub/tree/master/extensions)
+### Production Installation
 
-and many more...
+Download the latest release from the [Releases page](https://github.com/your-username/terms-of-use-extension/releases) and install the appropriate file for your browser.
 
-## Use this template
+## 🛠️ Development
 
-Create a new directory and run
+### Available Scripts
+
+- `npm run dev:chrome` - Start development build for Chrome with hot reload
+- `npm run dev:firefox` - Start development build for Firefox with hot reload
+- `npm run dev:opera` - Start development build for Opera with hot reload
+- `npm run build:chrome` - Build production version for Chrome
+- `npm run build:firefox` - Build production version for Firefox
+- `npm run build:opera` - Build production version for Opera
+- `npm run build` - Build for all supported browsers
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint errors automatically
+
+### Project Structure
 
 ```
-curl -fsSL https://github.com/abhijithvijayan/web-extension-starter/archive/react-typescript.tar.gz | tar -xz --strip-components=1
+├── source/                    # Source code
+│   ├── Background/           # Background script and API
+│   ├── ContentScript/        # Content script for page interaction
+│   ├── Popup/               # Extension popup UI
+│   │   ├── components/      # React components
+│   │   │   ├── chat/       # Chat interface
+│   │   │   ├── home/       # Home page
+│   │   │   └── settings/   # Settings page
+│   │   └── utils/          # Utility functions
+│   ├── Options/            # Extension options page
+│   ├── common/             # Shared utilities
+│   │   ├── clarity/        # AI processing logic
+│   │   ├── scrapper/       # Document scraping
+│   │   └── types/          # TypeScript definitions
+│   └── styles/             # Global styles
+├── extension/              # Built extension files
+├── views/                  # HTML templates
+└── webpack.config.js       # Webpack configuration
 ```
 
-## 🚀 Quick Start
+### Key Components
 
-Ensure you have
+- **Background Script**: Handles API communication and extension lifecycle
+- **Content Script**: Detects and extracts policy documents from web pages
+- **Popup Interface**: Main user interface with chat functionality
+- **Options Page**: Extension settings and configuration
+- **AI Processing**: Document analysis and summarization logic
 
-- [Node.js](https://nodejs.org) 10 or later installed
 
-Then run the following:
+### API Integration
 
-- `npm install` to install dependencies.
-- `npm run dev:chrome` to start the development server for chrome extension
-- `npm run dev:firefox` to start the development server for firefox addon
-- `npm run dev:opera` to start the development server for opera extension
-- `npm run build:chrome` to build chrome extension
-- `npm run build:firefox` to build firefox addon
-- `npm run build:opera` to build opera extension
-- `npm run build` builds and packs extensions all at once to extension/ directory
+The extension integrates with a backend API for advanced AI processing. Configure the API URL in your environment or update the `API_URL` constant in the content script.
 
-### Development
+## 📱 Browser Support
 
-- `npm install` to install dependencies.
-- To watch file changes in development
+- **Chrome**: Version 138+
+- **Firefox**: Latest version
+- **Opera**: Version 36+
 
-  - Chrome
-    - `npm run dev:chrome`
-  - Firefox
-    - `npm run dev:firefox`
-  - Opera
-    - `npm run dev:opera`
+## 🎯 Usage
 
-- **Load extension in browser**
+1. **Install the extension** in your preferred browser
+2. **Navigate to any website** with Terms of Service or Privacy Policy
+3. **Click the Clarity icon** in your browser toolbar
+4. **Start a conversation** about the policy document
+5. **Get instant insights** and summaries
+6. **Save important findings** to your chat history
 
-- ### Chrome
+## 🤝 Contributing
 
-  - Go to the browser address bar and type `chrome://extensions`
-  - Check the `Developer Mode` button to enable it.
-  - Click on the `Load Unpacked Extension…` button.
-  - Select your browsers folder in `extension/`.
+We welcome contributions! Please follow these steps:
 
-- ### Firefox
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-  - Load the Add-on via `about:debugging` as temporary Add-on.
-  - Choose the `manifest.json` file in the extracted directory
+### Development Guidelines
 
-- ### Opera
+- Follow the existing code style and ESLint configuration
+- Write tests for new features
+- Update documentation as needed
+- Ensure cross-browser compatibility
 
-  - Load the extension via `opera:extensions`
-  - Check the `Developer Mode` and load as unpacked from extension’s extracted directory.
+## 📄 License
 
-### Production
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- `npm run build` builds the extension for all the browsers to `extension/BROWSER` directory respectively.
+## 🙏 Acknowledgments
 
-Note: By default the `manifest.json` is set with version `0.0.0`. The webpack loader will update the version in the build with that of the `package.json` version. In order to release a new version, update version in `package.json` and run script.
+- Built with [web-extension-starter](https://github.com/abhijithvijayan/web-extension-starter)
+- Uses React and TypeScript for modern development
+- Powered by AI for intelligent document analysis
 
-If you don't want to use `package.json` version, you can disable the option [here](https://github.com/abhijithvijayan/web-extension-starter/blob/e10158c4a49948dea9fdca06592876d9ca04e028/webpack.config.js#L79).
+## 📞 Support
 
-### Generating browser specific manifest.json
+- **Issues**: [GitHub Issues](https://github.com/LogicalOgbonna/clarity/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/LogicalOgbonna/clarity/discussions)
+- **Email**: [arinze@gmail.com](mailto:arinze@gmail.com)
 
-Update `source/manifest.json` file with browser vendor prefixed manifest keys
+## 🔮 Roadmap
 
-```js
-{
-  "__chrome__name": "SuperChrome",
-  "__firefox__name": "SuperFox",
-  "__edge__name": "SuperEdge",
-  "__opera__name": "SuperOpera"
-}
-```
-
-if the vendor is `chrome` this compiles to:
-
-```js
-{
-  "name": "SuperChrome",
-}
-```
 
 ---
 
-Add keys to multiple vendors by separating them with | in the prefix
-
-```
-{
-  __chrome|opera__name: "SuperBlink"
-}
-```
-
-if the vendor is `chrome` or `opera`, this compiles to:
-
-```
-{
-  "name": "SuperBlink"
-}
-```
-
-See the original [README](https://github.com/abhijithvijayan/wext-manifest-loader) of `wext-manifest-loader` package for more details
-
-## Bugs
-
-Please file an issue [here](https://github.com/abhijithvijayan/web-extension-starter/issues/new) for bugs, missing documentation, or unexpected behavior.
-
-### Linting & TypeScript Config
-
-- Shared Eslint & Prettier Configuration - [`@abhijithvijayan/eslint-config`](https://www.npmjs.com/package/@abhijithvijayan/eslint-config)
-- Shared TypeScript Configuration - [`@abhijithvijayan/tsconfig`](https://www.npmjs.com/package/@abhijithvijayan/tsconfig)
-
-## License
-
-MIT © [Abhijith Vijayan](https://abhijithvijayan.in)
+**Made with ❤️ for better digital literacy and user empowerment**
