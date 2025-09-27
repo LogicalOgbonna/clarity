@@ -70,6 +70,12 @@
     "service_worker": "js/background.bundle.js"
   },
 
+  "externally_connectable": {
+    "ids": [
+      "ggaainpkgnnpjfnlhdlcgjlmapnpmmjl"
+    ]
+  },
+
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],

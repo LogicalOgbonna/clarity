@@ -31,13 +31,3 @@ export const Home = (): React.ReactElement => {
     </React.Fragment>
   );
 };
-
-/*
-Create a folder called components, inside it, crete a folder called chat and inside it a file index.ts and styles.scss 
-
-Using the information in localStore and sync storage (clarityID in sync storage) and chat_history_${clarityID} in localStoray, fetch the user chat history (consult @index.ts  for more information. 
-
-Should should be an isolated implementation
-
-In the @Popup.tsx file, display
-*/

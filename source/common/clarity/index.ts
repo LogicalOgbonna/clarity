@@ -474,6 +474,17 @@ const clarity = (category: string, externalLink?: string): void => {
       }
     };
 
+    const addMessageToChat = (message: Message): void => {
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        const data = JSON.parse(cachedData);
+        data.chats
+          .find((v: Chat) => v.id === message.chatId)
+          .messages.push(message);
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+      }
+    };
+
     const checkForChatInHistoryByUserId = (targetChatId: string): boolean => {
       const cachedData = localStorage.getItem(cacheKey);
       if (cachedData) {
@@ -683,9 +694,11 @@ const clarity = (category: string, externalLink?: string): void => {
             overflow-y: auto;
             padding: 0;
           ">
-            <div id="history-list" style="padding: 0;">
+            <!-- History List -->
+            <div id="history-list" style="padding: 0; overflow-y: auto; height: 600px; overflow-x: hidden; margin: 0 0 20px 0;">
               ${renderHistoryList(getChatHistory())}
             </div>
+            <!-- History Footer -->
           </div>
         </div>`;
 
@@ -929,42 +942,74 @@ const clarity = (category: string, externalLink?: string): void => {
           document.head.appendChild(style);
         }
 
-        // Use fetch with .then() instead of async/await for better compatibility
-        const payload = {
-          contents: [
-            {
-              parts: [
-                {
-                  text: question,
-                },
-              ],
-            },
-          ],
-        };
-
-        fetch(`${CLARITY_API_URL}/chat`, {
+        fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({message: question}),
         })
           .then((response) => response.json())
-          .then((result) => {
-            const aiResponse =
-              result.candidates?.[0]?.content?.parts?.[0]?.text;
+          .then((result: {chat: Message}) => {
+            const aiResponse = result.chat.parts
+              .map((part) => part.text)
+              .join('');
 
             if (aiResponse) {
-              responseMessage.textContent = aiResponse;
+              responseMessage.innerHTML = `<div style="
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            ">
+              <style>
+                .clarity-content ul {
+                  margin: 8px 0;
+                  padding-left: 20px;
+                }
+                .clarity-content li {
+                  margin: 4px 0;
+                }
+                .clarity-content p {
+                  margin: 8px 0;
+                }
+                .clarity-content b {
+                  font-weight: 600;
+                }
+              </style>
+              <div class="clarity-content" id="${result.chat.id}">
+                ${aiResponse}
+              </div>
+              <div style="
+                margin-top: 12px;
+                padding-top: 8px;
+                border-top: 1px solid #e0e0e0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              ">
+                ${languageSelector(result.chat.id)}
+              </div>
+            </div>`;
+
+              // Add event listener for this specific message's translate button
+              attachEventListenersToTranslateSelector([result.chat]);
+
+              addMessageToChat(result.chat);
             } else {
-              responseMessage.textContent =
-                "I'm sorry, I couldn't generate a response for that.";
+              responseMessage.innerHTML = generateResponseMessage({
+                content:
+                  "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
+                id: 'error_generate_response',
+              });
             }
           })
           .catch((error) => {
             console.log('🚀 ~ handleChat ~ error:', error);
-            responseMessage.textContent =
-              'An error occurred. Please try again.';
+            responseMessage.innerHTML = generateResponseMessage({
+              content:
+                "<p style='color: red;'>An error occurred. Please try again.</p>",
+              id: 'error_generate_response',
+            });
           })
           .finally(() => {
             if (chatContent) {

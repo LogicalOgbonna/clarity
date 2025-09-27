@@ -3,6 +3,8 @@ import * as React from 'react';
 import './styles.scss';
 import Layout, {type TabType} from './layout';
 import {Home} from './components/home';
+import {ChatComponent} from './components/chat';
+import {Settings} from './components/settings';
 
 const Popup: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<TabType>('home');
@@ -12,8 +14,8 @@ const Popup: React.FC = () => {
 
   const tabs: Record<TabType, React.ReactElement> = {
     home: <Home />,
-    chat: <div>Chat</div>,
-    settings: <div>Settings</div>,
+    chat: <ChatComponent />,
+    settings: <Settings />,
   };
 
   return <Layout handleTabClick={handleTabClick}>{tabs[activeTab]}</Layout>;

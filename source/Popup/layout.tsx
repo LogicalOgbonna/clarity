@@ -35,6 +35,7 @@ const Footer = ({
   ];
 
   const onTabClick = (tab: TabType): void => {
+    console.log('onTabClick ~ tab:');
     setActiveTab(tab);
     handleTabClick(tab);
   };

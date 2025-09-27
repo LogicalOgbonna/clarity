@@ -1,6 +1,7 @@
 @import '../styles/fonts';
 @import '../styles/reset';
 @import '../styles/variables';
+@import './components/shared/LoadingSpinner';
 
 body {
   color: $black;
@@ -138,5 +139,12 @@ body {
         margin-right: 8px;
       }
     }
+  }
+
+  .coming-soon {
+    text-align: center;
+    color: #666;
+    margin: auto;
+    font-size: 18px;
   }
 }

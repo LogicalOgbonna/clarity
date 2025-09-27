@@ -1,13 +1,18 @@
 import {browser} from 'webextension-polyfill-ts';
 import Scrapper from '../common/scrapper';
 import {Policy} from '../common/types/index.d';
-
-const API_URL = 'http://localhost:3000/api';
+import {
+  CHAT_HISTORY_KEY,
+  CLARITY_API_URL,
+  CLARITY_USER_ID_KEY,
+  CHAT_HISTORY_CACHE_TIME,
+  CHAT_HISTORY_LIMIT,
+} from '../common/constants';
 
 // Chat history caching utilities
 const getUserId = async (): Promise<string | null> => {
   try {
-    const result = await browser.storage.sync.get('clarityUserId');
+    const result = await browser.storage.sync.get(CLARITY_USER_ID_KEY);
     return result.clarityUserId || null;
   } catch (error) {
     console.error('Error getting user ID:', error);
@@ -20,7 +25,7 @@ const isCacheValid = (cachedData: string): boolean => {
     const data = JSON.parse(cachedData);
     const cacheTime = data.cachedAt;
     const now = Date.now();
-    const maxAge = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
+    const maxAge = CHAT_HISTORY_CACHE_TIME;
     return now - cacheTime < maxAge;
   } catch {
     return false;
@@ -34,7 +39,7 @@ const initializeChatHistory = async (): Promise<void> => {
     return;
   }
 
-  const cacheKey = `user_chats_${userId}`;
+  const cacheKey = `${CHAT_HISTORY_KEY}${userId}`;
 
   // Check if we have valid cached data in localStorage
   const cachedData = localStorage.getItem(cacheKey);
@@ -47,7 +52,7 @@ const initializeChatHistory = async (): Promise<void> => {
   try {
     console.log('No valid cache found, fetching chat history from API...');
     const response = await fetch(
-      `${API_URL}/chat/history/${userId}?page=1&limit=50`
+      `${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=${CHAT_HISTORY_LIMIT}`
     );
 
     if (response.ok) {
@@ -90,7 +95,7 @@ const addNewChatToHistory = async (newChat: any): Promise<void> => {
   const userId = await getUserId();
   if (!userId) return;
 
-  const cacheKey = `user_chats_${userId}`;
+  const cacheKey = `${CHAT_HISTORY_KEY}${userId}`;
   const cachedData = localStorage.getItem(cacheKey);
 
   if (cachedData) {
@@ -100,8 +105,8 @@ const addNewChatToHistory = async (newChat: any): Promise<void> => {
       data.chats.unshift(newChat);
 
       // Keep only last 50 chats
-      if (data.chats.length > 50) {
-        data.chats = data.chats.slice(0, 50);
+      if (data.chats.length > CHAT_HISTORY_LIMIT) {
+        data.chats = data.chats.slice(0, CHAT_HISTORY_LIMIT);
       }
 
       data.cachedAt = Date.now(); // Update cache timestamp
@@ -169,7 +174,7 @@ const getOrFetchPolicy = async ({
 
   // If not in cache, fetch from server
   try {
-    const response = await fetch(`${API_URL}/policy/fetch-or-create`, {
+    const response = await fetch(`${CLARITY_API_URL}/policy/fetch-or-create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
