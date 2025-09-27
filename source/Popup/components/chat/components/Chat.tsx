@@ -2,6 +2,7 @@ import * as React from 'react';
 import {ChatData, Message} from '../types.d';
 import {formatTimestamp} from '../../../utils';
 import {CLARITY_API_URL} from '../../../../common/constants';
+import {askLLM} from './prompt-api';
 
 interface ChatProps {
   chat?: ChatData | null;
@@ -70,23 +71,48 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
         attachments: [],
       },
     ]);
-
-    const response = await fetch(`${CLARITY_API_URL}/chat/${chat.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({message: inputValue}),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setMessages((prevMessages) => [...prevMessages, data.chat]);
+    try {
+      const response = await askLLM({prompt: inputValue, messages});
+      console.log('🚀 ~ handleSendMessage ~ response:', response);
+      if (response.success) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: `assistant_message_${new Date().getTime()}`,
+            role: 'assistant',
+            parts: [{text: response.message, type: 'text'}],
+            createdAt: new Date().toISOString(),
+            chatId: chat.id,
+            attachments: [],
+          },
+        ]);
+      } else {
+        console.error('Failed to send message:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
       setIsLoading(false);
       setInputValue('');
-    } else {
-      console.error('Failed to send message:', response.statusText);
     }
+    // return;
+
+    // const response = await fetch(`${CLARITY_API_URL}/chat/${chat.id}`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({message: inputValue}),
+    // });
+
+    // if (response.ok) {
+    //   const data = await response.json();
+    //   setMessages((prevMessages) => [...prevMessages, data.chat]);
+    //   setIsLoading(false);
+    //   setInputValue('');
+    // } else {
+    //   console.error('Failed to send message:', response.statusText);
+    // }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
