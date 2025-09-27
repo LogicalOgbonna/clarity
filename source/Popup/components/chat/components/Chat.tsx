@@ -3,6 +3,7 @@ import {ChatData, Message} from '../types.d';
 import {formatTimestamp} from '../../../utils';
 import {CLARITY_API_URL} from '../../../../common/constants';
 import {askLLM} from './prompt-api';
+import {LanguageOptions} from '../../shared/language';
 
 interface ChatProps {
   chat?: ChatData | null;
@@ -139,7 +140,6 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
         console.log('Translator availability:', m);
       },
     });
-    console.log('🚀 ~ handleTranslateMessage ~ availability:', availability);
     if (message && availability !== 'unavailable') {
       setCurrentSourceLanguage({
         ...currentSourceLanguage,
@@ -158,39 +158,6 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
           });
       });
     }
-  };
-
-  const renderLanguageSelector = (messageId: string): React.ReactElement => {
-    return (
-      <div className="language-selector">
-        <select
-          className="translate-selector"
-          value={currentSourceLanguage[messageId] ?? 'en'}
-          data-message-id={messageId}
-          onChange={(e) => {
-            handleTranslateMessage(
-              messageId,
-              e.target.value,
-              currentSourceLanguage[messageId] ?? 'en'
-            );
-          }}
-        >
-          <option value="">🌐 Translate</option>
-          <option value="en">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</option>
-          <option value="es">🇪🇸 Spanish</option>
-          <option value="fr">🇫🇷 French</option>
-          <option value="de">🇩🇪 German</option>
-          <option value="it">🇮🇹 Italian</option>
-          <option value="pt">🇵🇹 Portuguese</option>
-          <option value="ru">🇷🇺 Russian</option>
-          <option value="ja">🇯🇵 Japanese</option>
-          <option value="ko">🇰🇷 Korean</option>
-          <option value="zh">🇨🇳 Chinese</option>
-          <option value="ar">🇸🇦 Arabic</option>
-          <option value="hi">🇮🇳 Hindi</option>
-        </select>
-      </div>
-    );
   };
 
   const renderMessage = (
@@ -217,7 +184,16 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
         </div>
         {!isUser && (
           <div className="message-actions">
-            {renderLanguageSelector(message.id)}
+            <LanguageOptions
+              value={currentSourceLanguage[message.id] ?? 'en'}
+              onChange={(language) => {
+                handleTranslateMessage(
+                  message.id,
+                  language,
+                  currentSourceLanguage[message.id] ?? 'en'
+                );
+              }}
+            />
           </div>
         )}
       </div>

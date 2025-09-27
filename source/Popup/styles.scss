@@ -1,7 +1,7 @@
 @import '../styles/fonts';
 @import '../styles/reset';
 @import '../styles/variables';
-@import './components/shared/LoadingSpinner';
+@import './components/shared/loading/styles';
 
 body {
   color: $black;
