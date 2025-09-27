@@ -1,10 +1,11 @@
 import * as React from 'react';
 import {Languages} from '../shared/language';
+import {saveSetting, getSetting, SETTINGS_KEYS} from '../../utils';
 
 export const General = (): React.ReactElement => {
   const [language, setLanguage] = React.useState('en');
-  const [theme, setTheme] = React.useState('light');
-  const [notifications, setNotifications] = React.useState(true);
+  // const [theme, setTheme] = React.useState('light');
+  // const [notifications, setNotifications] = React.useState(true);
   const [autoAnalyze, setAutoAnalyze] = React.useState(false);
   const [llmProvider, setLlmProvider] = React.useState<'chrome' | 'server'>(
     'chrome'
@@ -25,6 +26,65 @@ export const General = (): React.ReactElement => {
       [key]: value,
     }));
   };
+
+  // Load settings on component mount
+  React.useEffect(() => {
+    const loadSettings = async (): Promise<void> => {
+      try {
+        const [
+          savedLanguage,
+          //   savedTheme,
+          //   savedNotifications,
+          savedAutoAnalyze,
+          savedLlmProvider,
+          savedChromeConfig,
+        ] = await Promise.all([
+          getSetting(SETTINGS_KEYS.LANGUAGE, 'en'),
+          //   getSetting(SETTINGS_KEYS.THEME, 'light'),
+          //   getSetting(SETTINGS_KEYS.NOTIFICATIONS, true),
+          getSetting(SETTINGS_KEYS.AUTO_ANALYZE, false),
+          getSetting(SETTINGS_KEYS.LLM_PROVIDER, 'chrome'),
+          getSetting(SETTINGS_KEYS.CHROME_CONFIG, {
+            defaultTemperature: 1,
+            defaultTopK: 3,
+            maxTemperature: 2,
+            maxTopK: 128,
+          }),
+        ]);
+
+        setLanguage(savedLanguage);
+        // setTheme(savedTheme);
+        // setNotifications(savedNotifications);
+        setAutoAnalyze(savedAutoAnalyze);
+        setLlmProvider(savedLlmProvider as 'chrome' | 'server');
+        setChromeConfig(savedChromeConfig);
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  // Save settings when they change
+  React.useEffect(() => {
+    const saveSettings = async (): Promise<void> => {
+      try {
+        await Promise.all([
+          saveSetting(SETTINGS_KEYS.LANGUAGE, language),
+          //   saveSetting(SETTINGS_KEYS.THEME, theme),
+          //   saveSetting(SETTINGS_KEYS.NOTIFICATIONS, notifications),
+          saveSetting(SETTINGS_KEYS.AUTO_ANALYZE, autoAnalyze),
+          saveSetting(SETTINGS_KEYS.LLM_PROVIDER, llmProvider),
+          saveSetting(SETTINGS_KEYS.CHROME_CONFIG, chromeConfig),
+        ]);
+      } catch (error) {
+        console.error('Failed to save settings:', error);
+      }
+    };
+
+    saveSettings();
+  }, [language, autoAnalyze, llmProvider, chromeConfig]);
 
   return (
     <div className="settings-content">
@@ -163,7 +223,8 @@ export const General = (): React.ReactElement => {
         </div>
       </div>
 
-      <div className="settings-section">
+      {/* TODO: Add theme settings */}
+      {/* <div className="settings-section">
         <h3>Appearance</h3>
         <div className="setting-item">
           <label htmlFor="theme">Theme</label>
@@ -178,11 +239,12 @@ export const General = (): React.ReactElement => {
             <option value="auto">Auto</option>
           </select>
         </div>
-      </div>
+      </div> */}
 
       <div className="settings-section">
         <h3>Behavior</h3>
-        <div className="setting-item">
+        {/* TODO: Add notifications settings */}
+        {/* <div className="setting-item">
           <div className="setting-toggle">
             <input
               type="checkbox"
@@ -192,7 +254,7 @@ export const General = (): React.ReactElement => {
             />
             <label htmlFor="notifications">Enable notifications</label>
           </div>
-        </div>
+        </div> */}
         <div className="setting-item">
           <div className="setting-toggle">
             <input
@@ -213,11 +275,12 @@ export const General = (): React.ReactElement => {
             Clear chat history
           </button>
         </div>
-        <div className="setting-item">
+        {/* TODO: Add export data settings */}
+        {/* <div className="setting-item">
           <button className="setting-button secondary" type="button">
             Export data
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
