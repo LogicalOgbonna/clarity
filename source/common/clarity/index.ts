@@ -313,10 +313,9 @@ const clarity = (category: string, externalLink?: string): void => {
           .reverse()
           .map((chat) => {
             const titleToDisplay =
-              chat.title.length > 28
-                ? `${chat.title.slice(0, 28)}...`
+              chat.title.length > 35
+                ? `${chat.title.slice(0, 35)}...`
                 : chat.title;
-            const needsTooltip = chat.title.length > 28;
             return `
            <div class="history-item" data-chat-id="${chat.id}" style="
              padding: 16px;
@@ -359,30 +358,6 @@ const clarity = (category: string, externalLink?: string): void => {
              tooltip.style.opacity='0';}
              ">
                ${titleToDisplay}
-                 ${
-                   needsTooltip
-                     ? `<span class="tooltiptext" style="
-                   visibility: hidden;
-                   width: 200px;
-                   background-color: #333;
-                   color: white;
-                   text-align: center;
-                  border-radius: 6px;
-                   padding: 2px 4px;
-                   position: absolute;
-                   z-index: 99999;
-                   top: -5px;
-                   left: 0px;
-                   font-size: 12px;
-                   line-height: 1.4;
-                   word-wrap: break-word;
-                   white-space: normal;
-                   opacity: 0;
-                   transition: opacity 0.3s;
-                   pointer-events: none;
-                 ">${chat.title}</span>`
-                     : ''
-                 }
              </div>
              <div style="
                font-size: 12px;
@@ -392,13 +367,6 @@ const clarity = (category: string, externalLink?: string): void => {
                align-items: center;
              ">
                <span>${formatTimestamp(new Date(chat.createdAt).getTime())}</span>
-               <span style="
-                 background: #f0f0f0;
-                 color: #666;
-                 padding: 2px 6px;
-                 border-radius: 4px;
-                 font-size: 10px;
-               ">${hostname}</span>
              </div>
              <button class="delete-btn" data-chat-id="${chat.id}" style="
                position: absolute;
@@ -433,7 +401,11 @@ const clarity = (category: string, externalLink?: string): void => {
     const getChatHistory = (): Array<Chat> => {
       const history = localStorage.getItem(cacheKey);
       const parsedHistory = history ? JSON.parse(history) : [];
-      return parsedHistory.chats;
+      return parsedHistory.chats.sort((a: Chat, b: Chat) => {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
     };
 
     const addNewChatToHistory = (newChat: Chat): Chat[] => {
@@ -549,10 +521,6 @@ const clarity = (category: string, externalLink?: string): void => {
     ): void => {
       const history = getChatHistory();
       const filteredHistory = history.filter((chat) => chat.id !== id);
-      console.log(
-        '🚀 ~ deleteChatFromHistory ~ filteredHistory:',
-        filteredHistory
-      );
       localStorage.setItem(cacheKey, JSON.stringify(filteredHistory));
 
       // Refresh the history list
@@ -693,12 +661,39 @@ const clarity = (category: string, externalLink?: string): void => {
             flex: 1;
             overflow-y: auto;
             padding: 0;
+            display: flex;
+            flex-direction: column;
           ">
             <!-- History List -->
-            <div id="history-list" style="padding: 0; overflow-y: auto; height: 600px; overflow-x: hidden; margin: 0 0 20px 0;">
+            <div id="history-list" style="
+              height: calc(100vh - 47vh);
+              overflow-y: auto; 
+              overflow-x: hidden; 
+              padding: 0;
+            ">
               ${renderHistoryList(getChatHistory())}
             </div>
+            
             <!-- History Footer -->
+            <div style="
+              padding: 16px; 
+              border-top: 1px solid #f0f0f0; 
+              background-color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 72px;
+              flex-shrink: 0;
+            ">
+              <div style="
+                font-size: 12px;
+                color: #999;
+                text-align: center;
+              ">
+                <div style="margin-bottom: 4px;">📚 Chat History</div>
+                <div>Scroll to see more conversations</div>
+              </div>
+            </div>
           </div>
         </div>`;
 
