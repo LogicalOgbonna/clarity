@@ -1,4 +1,5 @@
 import {Message} from '../types.d';
+import {getSetting, SETTINGS_KEYS} from '../../../utils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const LanguageModel: {
@@ -34,22 +35,44 @@ export const askLLM = async ({
   });
   if (availability === 'unavailable')
     return {success: false, message: 'Language model is unavailable'};
-  const params = await self.LanguageModel.params();
-  console.log('🚀 ~ askLLM ~ params:', params);
+
+  const defaultChromeLLMConfig = await getSetting<{
+    temperature: number;
+    topK: number;
+  }>(SETTINGS_KEYS.CHROME_CONFIG, {
+    temperature: 1,
+    topK: 3,
+  });
+
   const session = await self.LanguageModel.create({
     initialPrompts: [
       {
         role: 'system',
-        content: `You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point.
-Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.`,
+        content: `You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. 
+        Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.`,
       },
       ...messages.map((message) => ({
         role: message.role,
         content: message.parts.map((part) => part.text).join(''),
       })),
     ],
+    // TODO: set the languages to the user selected default language
+    expectedInputs: [
+      {
+        type: 'text',
+        languages: ['en'],
+      },
+    ],
+    // TODO: set the languages to the user selected default language
+    expectedOutputs: [
+      {
+        type: 'text',
+        languages: ['en'],
+      },
+    ],
+    ...defaultChromeLLMConfig,
   });
   const response = await session.prompt(prompt);
-  console.log('🚀 ~ askLLM ~ response:', response);
+
   return {success: true, message: response};
 };

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 export const Accounts = (): React.ReactElement => {
-  const [user, setUser] = React.useState({
+  const [user] = React.useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
     avatar: '👤',

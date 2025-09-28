@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 export const Billing = (): React.ReactElement => {
-  const [plan, setPlan] = React.useState('free');
-  const [billingCycle, setBillingCycle] = React.useState('monthly');
+  //   const [plan, setPlan] = React.useState('free');
+  //   const [billingCycle, setBillingCycle] = React.useState('monthly');
 
   return (
     <div className="settings-content">

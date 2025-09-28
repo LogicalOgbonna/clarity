@@ -6,15 +6,13 @@ export const General = (): React.ReactElement => {
   const [language, setLanguage] = React.useState('en');
   // const [theme, setTheme] = React.useState('light');
   // const [notifications, setNotifications] = React.useState(true);
-  const [autoAnalyze, setAutoAnalyze] = React.useState(false);
+  const [autoAnalyze, setAutoAnalyze] = React.useState(true);
   const [llmProvider, setLlmProvider] = React.useState<'chrome' | 'server'>(
     'chrome'
   );
   const [chromeConfig, setChromeConfig] = React.useState({
-    defaultTemperature: 1,
-    defaultTopK: 3,
-    maxTemperature: 2,
-    maxTopK: 128,
+    temperature: 1,
+    topK: 3,
   });
 
   const updateChromeConfig = (
@@ -42,13 +40,14 @@ export const General = (): React.ReactElement => {
           getSetting(SETTINGS_KEYS.LANGUAGE, 'en'),
           //   getSetting(SETTINGS_KEYS.THEME, 'light'),
           //   getSetting(SETTINGS_KEYS.NOTIFICATIONS, true),
-          getSetting(SETTINGS_KEYS.AUTO_ANALYZE, false),
-          getSetting(SETTINGS_KEYS.LLM_PROVIDER, 'chrome'),
-          getSetting(SETTINGS_KEYS.CHROME_CONFIG, {
-            defaultTemperature: 1,
-            defaultTopK: 3,
-            maxTemperature: 2,
-            maxTopK: 128,
+          getSetting(SETTINGS_KEYS.AUTO_ANALYZE, true),
+          getSetting<'chrome' | 'server'>(SETTINGS_KEYS.LLM_PROVIDER, 'chrome'),
+          getSetting<{
+            temperature: number;
+            topK: number;
+          }>(SETTINGS_KEYS.CHROME_CONFIG, {
+            temperature: 1,
+            topK: 3,
           }),
         ]);
 
@@ -56,7 +55,7 @@ export const General = (): React.ReactElement => {
         // setTheme(savedTheme);
         // setNotifications(savedNotifications);
         setAutoAnalyze(savedAutoAnalyze);
-        setLlmProvider(savedLlmProvider as 'chrome' | 'server');
+        setLlmProvider(savedLlmProvider);
         setChromeConfig(savedChromeConfig);
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -75,8 +74,14 @@ export const General = (): React.ReactElement => {
           //   saveSetting(SETTINGS_KEYS.THEME, theme),
           //   saveSetting(SETTINGS_KEYS.NOTIFICATIONS, notifications),
           saveSetting(SETTINGS_KEYS.AUTO_ANALYZE, autoAnalyze),
-          saveSetting(SETTINGS_KEYS.LLM_PROVIDER, llmProvider),
-          saveSetting(SETTINGS_KEYS.CHROME_CONFIG, chromeConfig),
+          saveSetting<'chrome' | 'server'>(
+            SETTINGS_KEYS.LLM_PROVIDER,
+            llmProvider
+          ),
+          saveSetting<{
+            temperature: number;
+            topK: number;
+          }>(SETTINGS_KEYS.CHROME_CONFIG, chromeConfig),
         ]);
       } catch (error) {
         console.error('Failed to save settings:', error);
@@ -110,88 +115,38 @@ export const General = (): React.ReactElement => {
             <h4>Chrome LLM Configuration</h4>
 
             <div className="setting-item">
-              <label htmlFor="defaultTemperature">
-                Default Temperature: {chromeConfig.defaultTemperature}
+              <label htmlFor="temperature">
+                Temperature: {chromeConfig.temperature}
               </label>
               <input
-                id="defaultTemperature"
+                id="temperature"
                 type="range"
                 min="0"
-                max="2"
+                max="3"
                 step="0.1"
-                value={chromeConfig.defaultTemperature}
+                value={chromeConfig.temperature}
                 onChange={(e) =>
-                  updateChromeConfig(
-                    'defaultTemperature',
-                    parseFloat(e.target.value)
-                  )
+                  updateChromeConfig('temperature', parseFloat(e.target.value))
                 }
                 className="setting-range"
               />
               <div className="range-labels">
                 <span>0 (Deterministic)</span>
-                <span>2 (Creative)</span>
+                <span>3 (Creative)</span>
               </div>
             </div>
 
             <div className="setting-item">
-              <label htmlFor="defaultTopK">
-                Default Top-K: {chromeConfig.defaultTopK}
-              </label>
+              <label htmlFor="topK">Top-K: {chromeConfig.topK}</label>
               <input
-                id="defaultTopK"
+                id="topK"
                 type="range"
                 min="1"
                 max="128"
                 step="1"
-                value={chromeConfig.defaultTopK}
+                value={chromeConfig.topK}
                 onChange={(e) =>
-                  updateChromeConfig('defaultTopK', parseInt(e.target.value))
-                }
-                className="setting-range"
-              />
-              <div className="range-labels">
-                <span>1 (Focused)</span>
-                <span>128 (Diverse)</span>
-              </div>
-            </div>
-
-            <div className="setting-item">
-              <label htmlFor="maxTemperature">
-                Max Temperature: {chromeConfig.maxTemperature}
-              </label>
-              <input
-                id="maxTemperature"
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={chromeConfig.maxTemperature}
-                onChange={(e) =>
-                  updateChromeConfig(
-                    'maxTemperature',
-                    parseFloat(e.target.value)
-                  )
-                }
-                className="setting-range"
-              />
-              <div className="range-labels">
-                <span>0 (Deterministic)</span>
-                <span>2 (Creative)</span>
-              </div>
-            </div>
-
-            <div className="setting-item">
-              <label htmlFor="maxTopK">Max Top-K: {chromeConfig.maxTopK}</label>
-              <input
-                id="maxTopK"
-                type="range"
-                min="1"
-                max="128"
-                step="1"
-                value={chromeConfig.maxTopK}
-                onChange={(e) =>
-                  updateChromeConfig('maxTopK', parseInt(e.target.value))
+                  updateChromeConfig('topK', parseInt(e.target.value))
                 }
                 className="setting-range"
               />

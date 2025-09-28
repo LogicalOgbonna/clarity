@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {ChatData, Message} from '../types.d';
-import {formatTimestamp} from '../../../utils';
+import {formatTimestamp, getSetting, SETTINGS_KEYS} from '../../../utils';
 import {CLARITY_API_URL} from '../../../../common/constants';
 import {askLLM} from './prompt-api';
 import {LanguageOptions} from '../../shared/language';
@@ -37,12 +37,23 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
   const [currentSourceLanguage, setCurrentSourceLanguage] = React.useState<
     Record<string, string>
   >({});
-
+  const [defaultLanguage, setDefaultLanguage] = React.useState<string>('en');
   const [inputValue, setInputValue] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [messages, setMessages] = React.useState<Message[]>(
     chat?.messages || []
   );
+
+  React.useEffect(() => {
+    if (chat?.messages) {
+      setMessages(chat.messages);
+    }
+    const loadSettings = async (): Promise<void> => {
+      const language = await getSetting(SETTINGS_KEYS.LANGUAGE, 'en');
+      setDefaultLanguage(language);
+    };
+    loadSettings();
+  }, [chat?.messages]);
 
   if (!chat) {
     return (
@@ -56,9 +67,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     );
   }
 
-  const handleSendMessage = async (): Promise<void> => {
-    if (!inputValue.trim() || isLoading) return;
-
+  const handleSendMessageWithChromeLLM = async (): Promise<void> => {
     setIsLoading(true);
 
     setMessages((prevMessages) => [
@@ -74,7 +83,6 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     ]);
     try {
       const response = await askLLM({prompt: inputValue, messages});
-      console.log('🚀 ~ handleSendMessage ~ response:', response);
       if (response.success) {
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -87,6 +95,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
             attachments: [],
           },
         ]);
+        // TODO: Send message to server to be saved
       } else {
         console.error('Failed to send message:', response.message);
       }
@@ -96,24 +105,60 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
       setIsLoading(false);
       setInputValue('');
     }
-    // return;
+  };
 
-    // const response = await fetch(`${CLARITY_API_URL}/chat/${chat.id}`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({message: inputValue}),
-    // });
+  const handleSendMessageWithServerLLM = async (): Promise<void> => {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        id: `user_message_${new Date().getTime()}`,
+        role: 'user',
+        parts: [{text: inputValue, type: 'text'}],
+        createdAt: new Date().toISOString(),
+        chatId: chat.id,
+        attachments: [],
+      },
+    ]);
+    try {
+      const response = await fetch(`${CLARITY_API_URL}/chat/${chat.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({message: inputValue}),
+      });
 
-    // if (response.ok) {
-    //   const data = await response.json();
-    //   setMessages((prevMessages) => [...prevMessages, data.chat]);
-    //   setIsLoading(false);
-    //   setInputValue('');
-    // } else {
-    //   console.error('Failed to send message:', response.statusText);
-    // }
+      if (response.ok) {
+        const data = await response.json();
+        setMessages((prevMessages) => [...prevMessages, data.chat]);
+        setIsLoading(false);
+        setInputValue('');
+      } else {
+        console.error('Failed to send message:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsLoading(false);
+      setInputValue('');
+    }
+  };
+
+  const handleSendMessage = async (): Promise<void> => {
+    if (!inputValue.trim() || isLoading) return;
+
+    setIsLoading(true);
+
+    const llmProvider = await getSetting<'chrome' | 'server'>(
+      SETTINGS_KEYS.LLM_PROVIDER,
+      'chrome'
+    );
+
+    if (llmProvider === 'chrome') {
+      await handleSendMessageWithChromeLLM();
+    } else {
+      await handleSendMessageWithServerLLM();
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -167,6 +212,9 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     const isUser = message.role === 'user';
     const content = message.parts.map((part) => part.text).join('');
 
+    // TODO: use tht language detector api to detect the language of the message,
+    // if it's not same as the default language, then translate the message to the default language
+
     return (
       <div
         key={message.id || index}
@@ -185,12 +233,12 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
         {!isUser && (
           <div className="message-actions">
             <LanguageOptions
-              value={currentSourceLanguage[message.id] ?? 'en'}
+              value={currentSourceLanguage[message.id] ?? defaultLanguage}
               onChange={(language) => {
                 handleTranslateMessage(
                   message.id,
                   language,
-                  currentSourceLanguage[message.id] ?? 'en'
+                  currentSourceLanguage[message.id] ?? defaultLanguage
                 );
               }}
             />
