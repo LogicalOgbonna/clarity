@@ -13,9 +13,18 @@
 		/* Additional Checks */
 		"useDefineForClassFields": true,
 		"skipLibCheck": true,
+		// Paths
+		"paths": {
+			"@/*": ["./core/*"],
+		  },
 	},
 	"include": [
-		"source",
+		"ui/source",
 		"webpack.config.js"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"extension"
 	]
 }

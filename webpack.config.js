@@ -14,8 +14,8 @@ const WextManifestWebpackPlugin = require('wext-manifest-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CSSMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
-const viewsPath = path.join(__dirname, 'views');
-const sourcePath = path.join(__dirname, 'source');
+const viewsPath = path.join(__dirname, 'ui', 'views');
+const sourcePath = path.join(__dirname, 'ui', 'source');
 const destPath = path.join(__dirname, 'extension');
 const nodeEnv = process.env.NODE_ENV || 'development';
 const targetBrowser = process.env.TARGET_BROWSER;
@@ -74,7 +74,7 @@ module.exports = {
   },
 
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.json'],
+    extensions: ['.ts', '.tsx', '.json'],
     alias: {
       'webextension-polyfill-ts': path.resolve(
         path.join(__dirname, 'node_modules', 'webextension-polyfill-ts')
@@ -205,7 +205,7 @@ module.exports = {
     new MiniCssExtractPlugin({filename: 'css/[name].css'}),
     // copy static assets
     new CopyWebpackPlugin({
-      patterns: [{from: 'source/assets', to: 'assets'}],
+      patterns: [{from: 'ui/source/assets', to: 'assets'}],
     }),
     // plugin to enable browser reloading in development mode
     extensionReloaderPlugin,

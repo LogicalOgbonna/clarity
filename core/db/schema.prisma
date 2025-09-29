@@ -1,0 +1,89 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id                String   @id @default(cuid())
+  name              String?
+  email             String?
+
+  browserId         String   @unique
+  numberOfSummaries Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  chats             chat[]
+}
+
+
+model tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  policies  policyTag[]
+}
+
+model policy {
+  id        Int      @id @default(autoincrement())
+
+  domain    String
+  link      String
+  type      String
+  version   String // hash of the date the policy was published in yyyy-mm-dd format
+  content   String
+  datePublished DateTime
+  company   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tags      policyTag[]
+
+  @@unique([domain, type, version])
+}
+
+model policyTag {
+  id        Int      @id @default(autoincrement())
+  policyId  Int
+  tagId     Int
+  createdAt DateTime @default(now())
+
+  policy    policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  tag       tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, tagId])
+}
+
+model chat {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  title         String
+  userId        String
+  visibility    String   @default("private") // 'public' or 'private'
+  traceId       String?
+  observationId String?
+
+  user          user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      message[]
+
+}
+
+model message {
+  id          String   @id @default(cuid())
+  chatId      String
+  role        String
+  parts       Json
+  attachments Json
+  createdAt   DateTime @default(now())
+
+  chat        chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
