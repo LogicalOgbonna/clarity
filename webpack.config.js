@@ -16,7 +16,7 @@ const CSSMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const viewsPath = path.join(__dirname, 'ui', 'views');
 const sourcePath = path.join(__dirname, 'ui', 'source');
-const destPath = path.join(__dirname, 'extension');
+const destPath = path.join(__dirname, 'dist', 'extension');
 const nodeEnv = process.env.NODE_ENV || 'development';
 const targetBrowser = process.env.TARGET_BROWSER;
 
@@ -74,7 +74,7 @@ module.exports = {
   },
 
   resolve: {
-    extensions: ['.ts', '.tsx', '.json'],
+    extensions: ['.ts', '.tsx', '.js', '.json'],
     alias: {
       'webextension-polyfill-ts': path.resolve(
         path.join(__dirname, 'node_modules', 'webextension-polyfill-ts')
@@ -178,10 +178,10 @@ module.exports = {
     // delete previous build files
     new CleanWebpackPlugin({
       cleanOnceBeforeBuildPatterns: [
-        path.join(process.cwd(), `extension/${targetBrowser}`),
+        path.join(process.cwd(), `dist/extension/${targetBrowser}`),
         path.join(
           process.cwd(),
-          `extension/${targetBrowser}.${getExtensionFileType(targetBrowser)}`
+          `dist/extension/${targetBrowser}.${getExtensionFileType(targetBrowser)}`
         ),
       ],
       cleanStaleWebpackAssets: false,
