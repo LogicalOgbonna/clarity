@@ -17,6 +17,8 @@ interface AskLLMProps {
   messages: Message[];
 }
 
+let session: any;
+
 export const askLLM = async ({
   prompt,
   messages,
@@ -44,35 +46,44 @@ export const askLLM = async ({
     topK: 3,
   });
 
-  const session = await self.LanguageModel.create({
-    initialPrompts: [
-      {
-        role: 'system',
-        content: `You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. 
+  if (!session) {
+    session = await self.LanguageModel.create({
+      initialPrompts: [
+        {
+          role: 'system',
+          content: `You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. 
         Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.`,
-      },
-      ...messages.map((message) => ({
-        role: message.role,
-        content: message.parts.map((part) => part.text).join(''),
-      })),
-    ],
-    // TODO: set the languages to the user selected default language
-    expectedInputs: [
-      {
-        type: 'text',
-        languages: ['en'],
-      },
-    ],
-    // TODO: set the languages to the user selected default language
-    expectedOutputs: [
-      {
-        type: 'text',
-        languages: ['en'],
-      },
-    ],
-    ...defaultChromeLLMConfig,
-  });
+        },
+        ...messages.map((message) => ({
+          role: message.role,
+          content: message.parts.map((part) => part.text).join(''),
+        })),
+      ],
+      // TODO: set the languages to the user selected default language
+      expectedInputs: [
+        {
+          type: 'text',
+          languages: ['en'],
+        },
+      ],
+      // TODO: set the languages to the user selected default language
+      expectedOutputs: [
+        {
+          type: 'text',
+          languages: ['en'],
+        },
+      ],
+      ...defaultChromeLLMConfig,
+    });
+  }
   const response = await session.prompt(prompt);
 
   return {success: true, message: response};
+};
+
+export const closeLLM = async (): Promise<void> => {
+  if (session) {
+    await session.destroy();
+    session = null;
+  }
 };

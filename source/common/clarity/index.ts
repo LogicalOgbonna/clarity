@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 // Note: Chat history will be handled via message passing to avoid isolation issues
 
@@ -40,8 +41,15 @@ declare const Translator: {
   }): Promise<{translate: (text: string) => Promise<string>}>;
 };
 
+declare const LanguageModel: {
+  availability({monitor}: {monitor: (m: EventTarget) => void}): Promise<string>;
+  create(data: any): Promise<{prompt: (data: any) => Promise<any>}>;
+  params(): Promise<any>;
+};
+
 declare const self: {
   Translator: typeof Translator;
+  LanguageModel: typeof LanguageModel;
 };
 
 type Message = {
@@ -60,6 +68,7 @@ type Message = {
     text: string;
   }[];
   attachments: unknown[];
+  createdAt: string;
 };
 
 type Chat = {
@@ -328,9 +337,8 @@ const clarity = (category: string, externalLink?: string): void => {
      * History helper functions
      */
     const renderHistoryList = (history: Array<Chat>): string => {
-      if (history.length > 0) {
+      if (history && history.length > 0) {
         return history
-          ?.slice()
           .map((chat) => {
             const titleToDisplay =
               chat.title.length > 35
@@ -420,11 +428,7 @@ const clarity = (category: string, externalLink?: string): void => {
     const getChatHistory = (): Array<Chat> => {
       const history = localStorage.getItem(cacheKey);
       const parsedHistory = history ? JSON.parse(history) : [];
-      return parsedHistory.chats?.sort((a: Chat, b: Chat) => {
-        return (
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      });
+      return parsedHistory.chats;
     };
 
     const addNewChatToHistory = (newChat: Chat): Chat[] => {
@@ -517,6 +521,7 @@ const clarity = (category: string, externalLink?: string): void => {
           if (newChatId) {
             item.addEventListener('click', (): void => {
               chatId = newChatId;
+              destroyPromptSession();
               loadChatFromHistory(newChatId);
             });
           }
@@ -528,6 +533,7 @@ const clarity = (category: string, externalLink?: string): void => {
         if (id) {
           btn.addEventListener('click', (e: Event): void => {
             e.stopPropagation();
+            destroyPromptSession();
             deleteChatFromHistory(id, loadChatFromHistory);
           });
         }
@@ -769,8 +775,26 @@ const clarity = (category: string, externalLink?: string): void => {
       </button>
     </div>
   `;
-    const generateUserMessage = (content: string): string => {
+
+    const loadingIndicator = `
+    <span>Thinking</span>
+    <div style="display: flex; gap: 2px;">
+      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
+      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.2s;"></div>
+      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.4s;"></div>
+    </div>
+  `;
+
+    const generateUserMessage = (
+      content: string,
+      timestamp: number
+    ): string => {
       return `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      ">
         <div style="
             background-color: #FF4A4A; 
             color: white; 
@@ -783,15 +807,78 @@ const clarity = (category: string, externalLink?: string): void => {
           ">
             ${content}
         </div>
+        <div style="
+          font-size: 11px;
+          color: #999;
+          text-align: right;
+        ">${formatTimestamp(timestamp)}</div>
+      </div>
       `;
+    };
+
+    const generateResponseMessageWithoutOuterDiv = ({
+      content,
+      timestamp,
+      id,
+    }: {
+      content: string;
+      id: string;
+      timestamp: number;
+    }): string => {
+      return `
+      <div 
+        style="
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+      ">
+        <style>
+          .clarity-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+          }
+          .clarity-content li {
+            margin: 4px 0;
+          }
+          .clarity-content p {
+            margin: 8px 0;
+          }
+          .clarity-content b {
+            font-weight: 600;
+          }
+        </style>
+        <div class="clarity-content" id="${id}">
+          ${content}
+        </div>
+      <span style="
+        font-size: 11px;
+        color: #999;
+        margin-top: 4px;
+        text-align: left;
+      ">${formatTimestamp(timestamp)}</span>
+      </div>
+      <div style="
+              margin-top: 12px;
+              padding-top: 8px;
+              border-top: 1px solid #e0e0e0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              ${languageSelector(id)}
+            </div>
+          </div>
+    `;
     };
 
     const generateResponseMessage = ({
       content,
       id,
+      timestamp,
     }: {
       content: string;
       id: string;
+      timestamp: number;
     }): string => {
       return `
       <div style="
@@ -832,6 +919,12 @@ const clarity = (category: string, externalLink?: string): void => {
               ${content}
             </div>
             <div style="
+              font-size: 11px;
+              color: #999;
+              margin-top: 4px;
+              text-align: left;
+            ">${formatTimestamp(timestamp)}</div>
+            <div style="
               margin-top: 12px;
               padding-top: 8px;
               border-top: 1px solid #e0e0e0;
@@ -868,201 +961,293 @@ const clarity = (category: string, externalLink?: string): void => {
 
     const loadChatFromHistory = (newChatId: string): string | null => {
       const chat = getChatHistory().find((c) => c.id === newChatId);
-      if (chat) {
-        const contentTxt = chat.messages
-          .map((message) => {
-            if (message.role === 'user') {
-              return generateUserMessage(
-                message.parts.map((part) => part.text).join('')
-              );
-            }
-            return generateResponseMessage({
-              content: message.parts.map((part) => part.text).join(''),
-              id: message.id,
-            });
-          })
-          .join('');
+      if (!chat) {
         closeHistoryDrawer(); // Close the drawer after loading
-        showChatUI(contentTxt);
-        attachEventListenersToTranslateSelector(chat.messages);
-        return contentTxt;
+        showChatUI(
+          generateResponseMessage({
+            content: 'Could not find chat in history',
+            id: 'error_find_chat_in_history',
+            timestamp: new Date().getTime(),
+          })
+        );
+        return null;
       }
 
-      closeHistoryDrawer(); // Close the drawer after loading
-      showChatUI(
-        generateResponseMessage({
-          content: 'Could not find chat in history',
-          id: 'error_find_chat_in_history',
+      const contentTxt = chat.messages
+        .map((message) => {
+          if (message.role === 'user') {
+            return generateUserMessage(
+              message.parts.map((part) => part.text).join(''),
+              new Date(message.createdAt).getTime()
+            );
+          }
+          return generateResponseMessage({
+            content: message.parts.map((part) => part.text).join(''),
+            id: message.id,
+            timestamp: new Date(message.createdAt).getTime(),
+          });
         })
-      );
-      return null;
+        .join('');
+      closeHistoryDrawer(); // Close the drawer after loading
+      showChatUI(contentTxt);
+      attachEventListenersToTranslateSelector(chat.messages);
+      return contentTxt;
     };
 
-    const showChatUI = (content: string): void => {
-      let chatUI = document.getElementById('tos-gpt-chat-ui');
+    const handleChatWithServerLLM = (
+      question: string,
+      responseMessage: HTMLElement,
+      chatContent: HTMLElement | null
+    ): void => {
+      if (!question.trim()) return;
 
-      const handleChat = (question: string): void => {
-        if (!question.trim()) return;
+      fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({message: question}),
+      })
+        .then((response) => response.json())
+        .then((result: {chat: Message}) => {
+          const aiResponse = result.chat.parts
+            .map((part) => part.text)
+            .join('');
 
-        // Create user message bubble
-        const userMessage = document.createElement('div');
-        userMessage.style.cssText = `
-          background-color: #FF4A4A; 
-          color: white; 
-          padding: 12px 16px; 
-          border-radius: 16px 16px 4px 16px; 
-          max-width: 80%; 
-          align-self: flex-end;
-          font-size: 14px;
-          line-height: 24px;
-          margin-bottom: 16px;
-          box-shadow: 0 2px 4px rgba(255, 74, 74, 0.2);
-          text-align: right;
-        `;
-        userMessage.textContent = question;
-        const chatContent = document.getElementById('chat-content');
-        if (chatContent) {
-          chatContent.appendChild(userMessage);
-        }
-
-        const chatInput = document.getElementById(
-          'chat-input'
-        ) as HTMLInputElement;
-        if (chatInput) {
-          chatInput.value = '';
-        }
-        if (chatContent) {
-          chatContent.scrollTop = chatContent.scrollHeight;
-        }
-
-        // Create AI response bubble with loading state
-        const responseMessage = document.createElement('div');
-        responseMessage.style.cssText = `
-          background-color: #f0f0f0; 
-          padding: 12px 16px; 
-          border-radius: 16px 16px 16px 4px; 
-          max-width: 80%; 
-          align-self: flex-start;
-          font-size: 14px;
-          line-height: 24px;
-          color: #333;
-          margin-bottom: 16px;
-          position: relative;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          text-align: left;
-        `;
-
-        // Add typing indicator
-        const typingIndicator = document.createElement('div');
-        typingIndicator.style.cssText = `
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        `;
-
-        typingIndicator.innerHTML = `
-          <span>Thinking</span>
-          <div style="display: flex; gap: 2px;">
-            <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
-            <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.2s;"></div>
-            <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.4s;"></div>
-          </div>
-        `;
-
-        responseMessage.appendChild(typingIndicator);
-        if (chatContent) {
-          chatContent.appendChild(responseMessage);
-          chatContent.scrollTop = chatContent.scrollHeight;
-        }
-
-        // Add CSS animation for typing indicator
-        if (!document.getElementById('typing-animation')) {
-          const style = document.createElement('style');
-          style.id = 'typing-animation';
-          style.textContent = `
-            @keyframes typing {
-              0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-              30% { transform: translateY(-10px); opacity: 1; }
-            }
-          `;
-          document.head.appendChild(style);
-        }
-
-        fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({message: question}),
-        })
-          .then((response) => response.json())
-          .then((result: {chat: Message}) => {
-            const aiResponse = result.chat.parts
-              .map((part) => part.text)
-              .join('');
-
-            if (aiResponse) {
-              responseMessage.innerHTML = `<div style="
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              line-height: 1.6;
-              color: #333;
+          if (aiResponse) {
+            responseMessage.innerHTML = `<div style="
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+          ">
+            <style>
+              .clarity-content ul {
+                margin: 8px 0;
+                padding-left: 20px;
+              }
+              .clarity-content li {
+                margin: 4px 0;
+              }
+              .clarity-content p {
+                margin: 8px 0;
+              }
+              .clarity-content b {
+                font-weight: 600;
+              }
+            </style>
+            <div class="clarity-content" id="${result.chat.id}">
+              ${aiResponse}
+            </div>
+            <div style="
+              font-size: 11px;
+              color: #999;
+              margin-top: 4px;
+              text-align: left;
+            ">${formatTimestamp(new Date(result.chat.createdAt).getTime())}</div>
+            <div style="
+              margin-top: 12px;
+              padding-top: 8px;
+              border-top: 1px solid #e0e0e0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
             ">
-              <style>
-                .clarity-content ul {
-                  margin: 8px 0;
-                  padding-left: 20px;
-                }
-                .clarity-content li {
-                  margin: 4px 0;
-                }
-                .clarity-content p {
-                  margin: 8px 0;
-                }
-                .clarity-content b {
-                  font-weight: 600;
-                }
-              </style>
-              <div class="clarity-content" id="${result.chat.id}">
-                ${aiResponse}
-              </div>
-              <div style="
-                margin-top: 12px;
-                padding-top: 8px;
-                border-top: 1px solid #e0e0e0;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-              ">
-                ${languageSelector(result.chat.id)}
-              </div>
-            </div>`;
+              ${languageSelector(result.chat.id)}
+            </div>
+          </div>`;
+            const userMessage: Message = {
+              chatId,
+              id: result.chat.id,
+              role: 'user',
+              parts: [{type: 'text', text: question}],
+              attachments: [],
+              createdAt: new Date().toISOString(),
+            };
 
-              // Add event listener for this specific message's translate button
-              attachEventListenersToTranslateSelector([result.chat]);
+            // Add event listener for this specific message's translate button
+            attachEventListenersToTranslateSelector([userMessage, result.chat]);
 
-              addMessageToChat(result.chat);
-            } else {
-              responseMessage.innerHTML = generateResponseMessage({
-                content:
-                  "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
-                id: 'error_generate_response',
-              });
-            }
-          })
-          .catch((error) => {
-            console.log('🚀 ~ handleChat ~ error:', error);
+            addMessageToChat(userMessage);
+            addMessageToChat(result.chat);
+          } else {
             responseMessage.innerHTML = generateResponseMessage({
               content:
-                "<p style='color: red;'>An error occurred. Please try again.</p>",
+                "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
               id: 'error_generate_response',
+              timestamp: new Date().getTime(),
             });
-          })
-          .finally(() => {
+          }
+        })
+        .catch((error) => {
+          console.log('🚀 ~ handleChat ~ error:', error);
+          responseMessage.innerHTML = generateResponseMessage({
+            content:
+              "<p style='color: red;'>An error occurred. Please try again.</p>",
+            id: 'error_generate_response',
+            timestamp: new Date().getTime(),
+          });
+        })
+        .finally(() => {
+          if (chatContent) {
+            chatContent.scrollTop = chatContent.scrollHeight;
+          }
+        });
+    };
+
+    let promptSession: any;
+    const handleChatWithChromeLLM = (
+      question: string,
+      responseMessage: HTMLElement,
+      chatContent: HTMLElement | null
+    ): void => {
+      if (!self.LanguageModel) return;
+      const previousMessages = getChatHistory().find(
+        (c) => c.id === chatId
+      )?.messages;
+      if (!promptSession) {
+        self.LanguageModel.availability({
+          monitor(m) {
+            m.addEventListener('downloadprogress', (e: any) => {
+              console.log(`Downloaded ${e.loaded * 100}%`);
+            });
+          },
+        }).then((availability) => {
+          if (availability === 'unavailable') {
+            responseMessage.innerHTML = generateResponseMessage({
+              content: 'Language model is unavailable',
+              id: 'error_language_model_unavailable',
+              timestamp: new Date().getTime(),
+            });
+            throw new Error('Language model is unavailable');
+          }
+        });
+        self.LanguageModel.create({
+          initialPrompts: [
+            {
+              role: 'system',
+              content:
+                'You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.',
+            },
+            ...(previousMessages || []).map((message) => ({
+              role: message.role,
+              content: message.parts.map((part) => part.text).join(''),
+            })),
+          ],
+        }).then((model) => {
+          promptSession = model;
+          model.prompt(question).then((response) => {
+            responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
+              content: response,
+              id: `assistant_response_${new Date().getTime()}`,
+              timestamp: new Date().getTime(),
+            });
             if (chatContent) {
               chatContent.scrollTop = chatContent.scrollHeight;
             }
           });
-      };
+        });
+      } else {
+        promptSession.prompt(question).then((response: string) => {
+          responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
+            content: response,
+            id: `assistant_response_${new Date().getTime()}`,
+            timestamp: new Date().getTime(),
+          });
+          if (chatContent) {
+            chatContent.scrollTop = chatContent.scrollHeight;
+          }
+        });
+      }
+    };
+
+    const destroyPromptSession = (): void => {
+      if (promptSession) {
+        promptSession.destroy();
+        promptSession = null;
+      }
+    };
+
+    const handleChat = (question: string): void => {
+      if (!question.trim()) return;
+
+      // Create user message bubble
+      const userMessage = document.createElement('div');
+      userMessage.innerHTML = generateUserMessage(
+        question,
+        new Date().getTime()
+      );
+      const chatContent = document.getElementById('chat-content');
+      if (chatContent) {
+        chatContent.appendChild(userMessage);
+      }
+
+      const chatInput = document.getElementById(
+        'chat-input'
+      ) as HTMLInputElement;
+      if (chatInput) {
+        chatInput.value = '';
+      }
+      if (chatContent) {
+        chatContent.scrollTop = chatContent.scrollHeight;
+      }
+
+      // Create AI response bubble with loading state
+      const responseMessage = document.createElement('div');
+      responseMessage.style.cssText = `
+        background-color: #f0f0f0; 
+        padding: 12px 16px; 
+        border-radius: 16px 16px 16px 4px; 
+        max-width: 80%; 
+        align-self: flex-start;
+        font-size: 14px;
+        line-height: 24px;
+        color: #333;
+        margin-bottom: 16px;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: left;
+      `;
+
+      // Add typing indicator
+      const typingIndicator = document.createElement('div');
+      typingIndicator.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      `;
+
+      typingIndicator.innerHTML = loadingIndicator;
+
+      responseMessage.appendChild(typingIndicator);
+      if (chatContent) {
+        chatContent.appendChild(responseMessage);
+        chatContent.scrollTop = chatContent.scrollHeight;
+      }
+
+      // Add CSS animation for typing indicator
+      if (!document.getElementById('typing-animation')) {
+        const style = document.createElement('style');
+        style.id = 'typing-animation';
+        style.textContent = `
+          @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      chrome.storage.sync.get('llmProvider').then(({llmProvider}) => {
+        if (llmProvider === 'server') {
+          handleChatWithServerLLM(question, responseMessage, chatContent);
+        } else {
+          handleChatWithChromeLLM(question, responseMessage, chatContent);
+        }
+      });
+    };
+
+    const showChatUI = (content: string): void => {
+      let chatUI = document.getElementById('tos-gpt-chat-ui');
 
       if (!chatUI) {
         // Add Urbanist font
@@ -1130,6 +1315,9 @@ const clarity = (category: string, externalLink?: string): void => {
               }
             }, 300);
           }
+
+          // Destroy the prompt session
+          destroyPromptSession();
         });
       }
 
@@ -1260,40 +1448,11 @@ const clarity = (category: string, externalLink?: string): void => {
             .map((part: {text: string}) => part.text)
             .join(' ');
 
-          messageElement.innerHTML = `<div style="
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-          ">
-            <style>
-              .clarity-content ul {
-                margin: 8px 0;
-                padding-left: 20px;
-              }
-              .clarity-content li {
-                margin: 4px 0;
-              }
-              .clarity-content p {
-                margin: 8px 0;
-              }
-              .clarity-content b {
-                font-weight: 600;
-              }
-            </style>
-            <div class="clarity-content" id="${messageId}">
-              ${messageParts}
-            </div>
-            <div style="
-              margin-top: 12px;
-              padding-top: 8px;
-              border-top: 1px solid #e0e0e0;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            ">
-              ${languageSelector(messageId)}
-            </div>
-          </div>`;
+          messageElement.innerHTML = generateResponseMessageWithoutOuterDiv({
+            content: messageParts,
+            id: messageId,
+            timestamp: new Date(assistantMessage.createdAt).getTime(),
+          });
 
           // Add event listener for this specific message's translate button
           attachEventListenersToTranslateSelector([assistantMessage]);
@@ -1325,6 +1484,7 @@ const clarity = (category: string, externalLink?: string): void => {
         generateResponseMessage({
           content: `<p style="color: red;">Could not find a link for ${category} of ${hostname}.</p>`,
           id: 'error_find_link',
+          timestamp: new Date().getTime(),
         })
       );
       return;
@@ -1337,12 +1497,14 @@ const clarity = (category: string, externalLink?: string): void => {
           .map((message) => {
             if (message.role === 'user') {
               return generateUserMessage(
-                message.parts.map((part) => part.text).join('')
+                message.parts.map((part) => part.text).join(''),
+                new Date(message.createdAt).getTime()
               );
             }
             return generateResponseMessage({
               content: message.parts.map((part) => part.text).join(''),
               id: message.id,
+              timestamp: new Date(message.createdAt).getTime(),
             });
           })
           .join('');
@@ -1355,6 +1517,7 @@ const clarity = (category: string, externalLink?: string): void => {
         generateResponseMessage({
           content: `<p style="color: red;">Could not find chat in history.</p>`,
           id: 'error_find_chat_in_history',
+          timestamp: new Date().getTime(),
         })
       );
       return;
@@ -1368,6 +1531,7 @@ const clarity = (category: string, externalLink?: string): void => {
         generateResponseMessage({
           content: `<p style="color: red;">Could not find chat content</p>`,
           id: 'error_find_chat_content',
+          timestamp: new Date().getTime(),
         })
       );
       return;
@@ -1415,14 +1579,7 @@ const clarity = (category: string, externalLink?: string): void => {
     align-items: center;
     gap: 4px;
   `;
-    typingIndicator.innerHTML = `
-    <span>Thinking</span>
-    <div style="display: flex; gap: 2px;">
-      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
-      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.2s;"></div>
-      <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.4s;"></div>
-    </div>
-  `;
+    typingIndicator.innerHTML = loadingIndicator;
 
     responseMessage.appendChild(typingIndicator);
     chatContent.appendChild(responseMessage);

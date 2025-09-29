@@ -2,7 +2,7 @@ import * as React from 'react';
 import {ChatData, Message} from '../types.d';
 import {formatTimestamp, getSetting, SETTINGS_KEYS} from '../../../utils';
 import {CLARITY_API_URL} from '../../../../common/constants';
-import {askLLM} from './prompt-api';
+import {askLLM, closeLLM} from './prompt-api';
 import {LanguageOptions} from '../../shared/language';
 
 interface ChatProps {
@@ -53,6 +53,9 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
       setDefaultLanguage(language);
     };
     loadSettings();
+    return () => {
+      closeLLM();
+    };
   }, [chat?.messages]);
 
   if (!chat) {
