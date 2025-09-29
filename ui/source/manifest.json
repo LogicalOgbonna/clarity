@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Clarity",
-  "short_name": "Clarity",
-  "description": "Clarity",
-  "homepage_url": "https://terms.dev",
+  "short_name": "Get clarity, before you click 'I agree'",
+  "description": "Understand the internet’s fine print — Clarity makes legalese readable, fast, and kinda fun.",
+  "homepage_url": "https://clarity.click",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxINoS8NRNA1qmQJLxtpTnO8yCw7ldMMuq3htEUsi6K4C8mUDwMaWTB/hiU6lnSBbvR4kynv8CeZ4SQwqwk8OkIv4oX/iLeBZOj+5kD3SWQRm0Y5lg7wCT7Mm0f4RdCrgoSbXcJSa3yc78YIdZbD8B6fWWXUO14kbf8zmspizpP+e9ZdJTXbw6y99BzzJN2NlHKoVOXut6lq9QLw19v8I8U+hcutZss9r9fH+NfAvquvfLakceFE7TWE/XC/jiufDTr+XlB4xYx13X0uv9hbh3dCIyajCYfYD6aggOhmZZ7+HuoBA0X3wh7t8P3oun3aACoiEtiA6Gve7F001OKi9LwIDAQAB",
   "__chrome|firefox__author": "Ogbonna Arinze",
   "__opera__developer": {
-    "name": "Clarity"
+    "name": "Ogbonna Arinze"
   },
 
-  "version": "0.0.1",
+  "version": "1.0.0",
   "icons": {
     "16": "assets/icons/favicon-16.png",
     "32": "assets/icons/favicon-32.png",
@@ -39,7 +40,7 @@
       "48": "assets/icons/favicon-48.png",
       "128": "assets/icons/favicon-128.png"
     },
-    "default_title": "Clarity",
+    "default_title": "Get clarity, before you click 'I agree'",
     "__opera__chrome_style": false,
     "__firefox__browser_style": false
   },
@@ -52,7 +53,7 @@
       "48": "assets/icons/favicon-48.png",
       "128": "assets/icons/favicon-128.png"
     },
-    "default_title": "Clarity"
+    "default_title": "Get clarity, before you click 'I agree'"
   },
 
   "__chrome|opera__options_page": "options.html",

@@ -1,15 +1,14 @@
 {
-  "name": "web-extension-starter",
-  "version": "2.0.0",
-  "description": "Web extension starter using react and typescript",
+  "name": "clarity",
+  "version": "1.0.0",
+  "description": "AI-Powered Terms of Service Analyzer",
   "private": true,
-  "repository": "https://github.com/abhijithvijayan/web-extension-starter.git",
+  "repository": "https://github.com/LogicalOgbonna/clarity.git",
   "author": {
-    "name": "abhijithvijayan",
-    "email": "email@abhijithvijayan.in",
-    "url": "https://abhijithvijayan.in"
+    "name": "Ogbonna Arinze",
+    "email": "arinzeogbo@gmail.com",
+    "url": "https://github.com/LogicalOgbonna/clarity"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=22.0.0",
     "yarn": ">= 1.0.0"
@@ -26,7 +25,6 @@
     "build:core": "tsc && tsc-alias --project core/tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -44,6 +42,7 @@
     "advanced-css-reset": "^1.2.2",
     "ai": "^5.0.32",
     "axios": "^1.12.2",
+    "caniuse-lite": "^1.0.30001745",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
