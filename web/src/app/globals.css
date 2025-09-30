@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth bg-clarity-cream;
+  }
+
+  body {
+    @apply bg-clarity-cream text-clarity-ink;
+  }
+
+  ::selection {
+    @apply bg-clarity-crimson text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -7,7 +7,8 @@
 	"parserOptions": {
 		"project": [
 			"./core/tsconfig.json",
-			"./tsconfig.json"
+			"./tsconfig.json",
+			"./web/tsconfig.json"
 		],
 		"sourceType": "module"
 	},
@@ -28,7 +29,9 @@
 		"max-len": ["error", { "code": 100, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }]
 	},
 	"env": {
-		"webextensions": true
+		"webextensions": true,
+		"next": true,
+		"browser": true
 	},
 	"settings": {
 		"node": {
