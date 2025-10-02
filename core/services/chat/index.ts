@@ -1,12 +1,14 @@
 import ChatRepository from '@/db/repository/chat';
 import {ChatDto, type InferType} from '@/db/dto/chat';
-import {type chat as Chat, type message as Message} from '@prisma/client';
+import {type chat as Chat, type message as Message, type policy as Policy} from '@prisma/client';
 import {type Prisma} from '@prisma/client';
 import {MessageService} from '../message';
 import {convertToModelMessages, generateText, UIMessagePart} from 'ai';
-import {azureProvider, SYSTEM_PROMPT} from '@/utils/model';
+import {LLM_MODEL, SYSTEM_PROMPT} from '@/utils/model';
 import {formatISO} from 'date-fns';
 import {CustomUIDataTypes} from '@/db/dto/message';
+import {PolicyService} from '../policy';
+import {openai} from '@ai-sdk/openai';
 
 export class ChatService {
   /**
@@ -18,7 +20,81 @@ export class ChatService {
     return ChatRepository.create(data);
   }
 
-  public static async continue(data: InferType<typeof ChatDto.continueChatDto>): Promise<Message> {
+  public static async createChatByLink(
+    data: InferType<typeof ChatDto.createChatByLinkDto>
+  ): Promise<Omit<Chat, 'userId'>> {
+    try {
+      const {link, userId, title, type, chatId, message} = ChatDto.createChatByLinkDto.parse(data);
+      const {hostname} = new URL(link);
+      const policies = await PolicyService.findByAny({
+        where: {
+          link: {
+            equals: link,
+          },
+          type,
+          hostname,
+        },
+        select: {content: true, id: true, createdAt: true},
+      });
+      let policy: Policy | null = null;
+      if (policies.length) {
+        policy = policies[0] || null;
+      } else {
+        policy = await PolicyService.create({
+          link,
+          type,
+          timeoutMs: '10000',
+          waitFor: '',
+        });
+      }
+      if (!policy) {
+        throw new Error('Policy not found');
+      }
+      try {
+        await ChatService.findByID({where: {id: chatId}});
+      } catch (error) {
+        await ChatService.create({
+          id: chatId,
+          userId,
+          title,
+          visibility: 'private',
+        });
+      }
+      // Create system message
+      await MessageService.createMessage({
+        chatId: chatId,
+        content: `${SYSTEM_PROMPT} 
+        Here is the policy content:
+        ${policy.content}`,
+        role: 'system',
+      });
+
+      // Create user message
+      await MessageService.createMessage({
+        chatId: chatId,
+        content: message,
+        role: 'user',
+      });
+
+      const chat = await ChatService.findByID({
+        where: {id: chatId},
+        select: {
+          id: true,
+          title: true,
+          visibility: true,
+          traceId: true,
+          observationId: true,
+          createdAt: true,
+          messages: {where: {role: {in: ['user', 'assistant', 'system']}}, orderBy: {createdAt: 'asc'}},
+        },
+      });
+      return chat;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public static async continueChat(data: InferType<typeof ChatDto.continueChatDto>): Promise<Message> {
     try {
       const {id, message} = ChatDto.continueChatDto.parse(data);
       const messages = await MessageService.findByChat({chatId: id});
@@ -33,7 +109,7 @@ export class ChatService {
       messages.push(newMessage);
       // Generate summary using LLM
       const {text: summary} = await generateText({
-        model: azureProvider.chat('gpt-4.1'),
+        model: openai.chat(LLM_MODEL),
         messages: convertToModelMessages(
           messages.map((message) => ({
             id: message.id,
@@ -49,7 +125,6 @@ export class ChatService {
       const assistantMessage = await MessageService.createMessage({chatId: id, content: summary, role: 'assistant'});
       return assistantMessage;
     } catch (error) {
-      console.error('Error continuing chat:', error);
       throw error;
     }
   }
@@ -59,7 +134,10 @@ export class ChatService {
    * @param data - The chat ID to find
    * @returns { Promise<Chat> } A promise that resolves to the chat if found
    */
-  static async findByID(data: InferType<typeof ChatDto.idDto>): Promise<Omit<Chat, 'userId'>> {
+  static async findByID(data: {
+    where: Prisma.chatWhereUniqueInput;
+    select?: Prisma.chatSelect;
+  }): Promise<Omit<Chat, 'userId'>> {
     return ChatRepository.findByID(data);
   }
 

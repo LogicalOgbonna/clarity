@@ -47,13 +47,11 @@ router.post('/fetch-or-create', async (req, res) => {
 
     const {hostname} = new URL(domain);
     // First, try to find existing policy
-    const existingPolicies = await PolicyService.findByAny({
-      where: {domain: hostname, link, type},
-    });
+    const existingPolicies = await PolicyService.findByID({hostname, type, version: link});
 
-    if (existingPolicies.length > 0) {
+    if (existingPolicies) {
       return res.json({
-        policy: existingPolicies[0],
+        policy: existingPolicies,
         status: 'success',
         message: 'Policy found successfully',
         created: false,
@@ -62,7 +60,6 @@ router.post('/fetch-or-create', async (req, res) => {
 
     // If not found, create new policy
     const {content: _content, ...newPolicy} = await PolicyService.create({
-      domain,
       link,
       type,
       timeoutMs: '10000',

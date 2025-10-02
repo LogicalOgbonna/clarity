@@ -1,4 +1,4 @@
-import {z} from 'zod';
+import {string, url, enum as zEnum, z} from 'zod';
 
 export class ChatDto {
   public static createChatDto = z.object({
@@ -8,6 +8,15 @@ export class ChatDto {
     visibility: z.enum(['public', 'private']).default('private'),
     traceId: z.string().optional(),
     observationId: z.string().optional(),
+  });
+
+  public static createChatByLinkDto = z.object({
+    link: url(),
+    type: zEnum(['privacy', 'terms']),
+    userId: string().min(1, 'User ID is required'),
+    chatId: string(),
+    message: string(),
+    title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
   });
 
   public static continueChatDto = z.object({

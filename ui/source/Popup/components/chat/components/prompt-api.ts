@@ -1,23 +1,12 @@
 import {Message} from '../types.d';
 import {getSetting, SETTINGS_KEYS} from '../../../utils';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-declare const LanguageModel: {
-  availability({monitor}: {monitor: (m: EventTarget) => void}): Promise<string>;
-  create(data: any): Promise<{prompt: (data: any) => Promise<any>}>;
-  params(): Promise<any>;
-};
-
-declare const self: {
-  LanguageModel: typeof LanguageModel;
-};
-
 interface AskLLMProps {
   prompt: string;
   messages: Message[];
 }
 
-let session: any;
+let session: LanguageModel | null = null;
 
 export const askLLM = async ({
   prompt,
@@ -26,17 +15,9 @@ export const askLLM = async ({
   success: boolean;
   message: string;
 }> => {
-  if (!self.LanguageModel)
-    return {success: false, message: 'Language model is not available'};
-  const availability = await self.LanguageModel.availability({
-    monitor(m) {
-      m.addEventListener('downloadprogress', (e: any) => {
-        console.log(`Downloaded ${e.loaded * 100}%`);
-      });
-    },
-  });
-  if (availability === 'unavailable')
-    return {success: false, message: 'Language model is unavailable'};
+  if (!LanguageModel) return {success: false, message: 'Language model is not available'};
+  const availability = await LanguageModel.availability({});
+  if (availability === 'unavailable') return {success: false, message: 'Language model is unavailable'};
 
   const defaultChromeLLMConfig = await getSetting<{
     temperature: number;
@@ -47,7 +28,7 @@ export const askLLM = async ({
   });
 
   if (!session) {
-    session = await self.LanguageModel.create({
+    session = await LanguageModel.create({
       initialPrompts: [
         {
           role: 'system',
@@ -55,7 +36,7 @@ export const askLLM = async ({
         Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.`,
         },
         ...messages.map((message) => ({
-          role: message.role,
+          role: message.role as LanguageModelMessageRole,
           content: message.parts.map((part) => part.text).join(''),
         })),
       ],
@@ -74,6 +55,11 @@ export const askLLM = async ({
         },
       ],
       ...defaultChromeLLMConfig,
+      monitor: (m) => {
+        m.addEventListener('downloadprogress', (e: any) => {
+          console.log(`Downloaded ${e.loaded * 100}%`);
+        });
+      },
     });
   }
   const response = await session.prompt(prompt);
@@ -83,7 +69,7 @@ export const askLLM = async ({
 
 export const closeLLM = async (): Promise<void> => {
   if (session) {
-    await session.destroy();
+    session.destroy();
     session = null;
   }
 };

@@ -30,8 +30,8 @@ Clarity is a powerful browser extension that helps users understand complex Term
 2. **Install dependencies**
    ```bash
    npm install
-   # or
-   yarn install
+
+   npm exec playwright install
    ```
 
 3. **Build the extension**

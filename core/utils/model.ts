@@ -1,21 +1,4 @@
-import {customProvider, Provider} from 'ai';
-import {createAzure} from '@ai-sdk/azure';
-require('dotenv').config();
-
-const azureProvider = createAzure({
-  apiKey: process.env.OPENAI_API_KEY!,
-  baseURL: process.env.OPENAI_BASE_URL!,
-  apiVersion: '2025-03-01-preview',
-});
-
-const myProvider: Provider = customProvider({
-  languageModels: {
-    'gpt-4.1': azureProvider.chat('gpt-4.1'),
-  },
-  textEmbeddingModels: {
-    'text-embedding-3-large': azureProvider.textEmbeddingModel('text-embedding-3-large'),
-  },
-});
+export const LLM_MODEL = 'gpt-4.1';
 
 const SYSTEM_PROMPT = `
 You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point.
@@ -62,4 +45,4 @@ Return your response as well-formatted HTML starting from a <div>, without inclu
 
 `;
 
-export {myProvider, azureProvider, SYSTEM_PROMPT};
+export {SYSTEM_PROMPT};

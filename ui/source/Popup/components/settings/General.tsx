@@ -8,7 +8,7 @@ export const General = (): React.ReactElement => {
   // const [notifications, setNotifications] = React.useState(true);
   const [autoAnalyze, setAutoAnalyze] = React.useState(true);
   const [llmProvider, setLlmProvider] = React.useState<'chrome' | 'server'>(
-    'chrome'
+    'server'
   );
   const [chromeConfig, setChromeConfig] = React.useState({
     temperature: 1,
@@ -41,7 +41,7 @@ export const General = (): React.ReactElement => {
           //   getSetting(SETTINGS_KEYS.THEME, 'light'),
           //   getSetting(SETTINGS_KEYS.NOTIFICATIONS, true),
           getSetting(SETTINGS_KEYS.AUTO_ANALYZE, true),
-          getSetting<'chrome' | 'server'>(SETTINGS_KEYS.LLM_PROVIDER, 'chrome'),
+          getSetting<'chrome' | 'server'>(SETTINGS_KEYS.LLM_PROVIDER, 'server'),
           getSetting<{
             temperature: number;
             topK: number;

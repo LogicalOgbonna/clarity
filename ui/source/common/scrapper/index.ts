@@ -121,7 +121,7 @@ class Scrapper {
       // Check the next sibling
       if (elementIndex >= 0 && elementIndex < siblings.length - 1) {
         const nextSiblingNode = siblings[elementIndex + 1];
-        if (nextSiblingNode.nodeType === Node.ELEMENT_NODE) {
+        if (nextSiblingNode && nextSiblingNode.nodeType === Node.ELEMENT_NODE) {
           const nextElement = nextSiblingNode as Element;
           if (nextElement.classList.contains('extension-indicator')) {
             return true;

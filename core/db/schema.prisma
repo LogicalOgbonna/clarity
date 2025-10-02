@@ -35,7 +35,7 @@ model tag {
 model policy {
   id        Int      @id @default(autoincrement())
 
-  domain    String
+  hostname    String
   link      String
   type      String
   version   String // hash of the date the policy was published in yyyy-mm-dd format
@@ -48,7 +48,7 @@ model policy {
 
   tags      policyTag[]
 
-  @@unique([domain, type, version])
+  @@unique([hostname, type, version])
 }
 
 model policyTag {

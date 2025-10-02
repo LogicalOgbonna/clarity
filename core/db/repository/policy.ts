@@ -57,10 +57,10 @@ class PolicyRepository extends PolicyDto {
     policy: Partial<InferType<typeof PolicyDto.createPolicyDto>>;
   }): Promise<Policy> {
     try {
-      const domain_type_version = PolicyDto.idDto.parse(id);
+      const hostname_type_version = PolicyDto.idDto.parse(id);
       const data = PolicyDto.createPolicyDto.parse(policy);
       return db.policy.update({
-        where: {domain_type_version},
+        where: {hostname_type_version},
         data,
       });
     } catch (error) {
@@ -70,8 +70,8 @@ class PolicyRepository extends PolicyDto {
 
   static async delete(id: InferType<typeof PolicyDto.idDto>): Promise<Policy> {
     try {
-      const domain_type_version = PolicyDto.idDto.parse(id);
-      return db.policy.delete({where: {domain_type_version}});
+      const hostname_type_version = PolicyDto.idDto.parse(id);
+      return db.policy.delete({where: {hostname_type_version}});
     } catch (error) {
       throw error;
     }
@@ -79,9 +79,9 @@ class PolicyRepository extends PolicyDto {
 
   static async findByID(id: InferType<typeof PolicyDto.idDto>): Promise<Policy> {
     try {
-      const domain_type_version = PolicyDto.idDto.parse(id);
+      const hostname_type_version = PolicyDto.idDto.parse(id);
       return db.policy.findUniqueOrThrow({
-        where: {domain_type_version},
+        where: {hostname_type_version},
         include: {
           tags: {
             include: {

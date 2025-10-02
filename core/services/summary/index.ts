@@ -1,7 +1,8 @@
 import {PolicyService} from '@/services/policy';
 import {ChatService} from '@/services/chat';
 import {MessageService} from '@/services/message';
-import {azureProvider, myProvider, SYSTEM_PROMPT} from '@/utils/model';
+import {LLM_MODEL, SYSTEM_PROMPT} from '@/utils/model';
+import {openai} from '@ai-sdk/openai';
 import {convertToModelMessages, generateObject, generateText, UIMessagePart} from 'ai';
 import {SummaryDto} from '@/db/dto/summary';
 import {CustomUIDataTypes} from '@/db/dto/message';
@@ -41,13 +42,12 @@ export class SummaryService extends SummaryDto {
       const {hostname} = new URL(link);
       const existingPolicies = await PolicyService.findByAny({
         where: {
-          domain: hostname,
+          hostname,
           type,
           link,
         },
         select: {content: true, id: true, createdAt: true},
       });
-
       // TODO: check if createdAt for the latest policy is more than 1 week old, fetch a new one and compare their dates
 
       let policyContent: string;
@@ -65,7 +65,6 @@ export class SummaryService extends SummaryDto {
       } else {
         // Create new policy (this will fetch and store the content)
         const newPolicy = await PolicyService.create({
-          domain: link,
           link,
           type,
           timeoutMs: '10000',
@@ -76,13 +75,13 @@ export class SummaryService extends SummaryDto {
       }
 
       try {
-        await ChatService.findByID({id: chatId});
+        await ChatService.findByID({where: {id: chatId}});
       } catch (error) {
-        const title = await this.generateTitleForChat(message);
+        // const title = await this.generateTitleForChat(message);
         await ChatService.create({
           id: chatId,
           userId,
-          title,
+          title: message,
           visibility: 'private',
         });
       }
@@ -105,7 +104,7 @@ export class SummaryService extends SummaryDto {
 
       // Generate summary using LLM
       const {text: summary} = await generateText({
-        model: azureProvider.chat('gpt-4.1'),
+        model: openai.chat(LLM_MODEL),
         messages: convertToModelMessages(
           messages.map((message) => ({
             id: message.id,
@@ -122,7 +121,7 @@ export class SummaryService extends SummaryDto {
       // Create assistant message with summary
       await MessageService.createMessage({chatId, content: summary, role: 'assistant'});
 
-      const chat = await ChatService.findByID({id: chatId});
+      const chat = await ChatService.findByID({where: {id: chatId}});
 
       return {
         summary,
@@ -140,7 +139,7 @@ export class SummaryService extends SummaryDto {
     const {
       object: {title},
     } = await generateObject({
-      model: azureProvider.chat('gpt-4.1'),
+      model: openai.chat(LLM_MODEL),
       prompt: message,
       schema: object({
         title: string().describe('The title of the chat'),
@@ -173,7 +172,7 @@ export class SummaryService extends SummaryDto {
       const policy = await PolicyService.findByNumericID(policyId);
 
       // Create chat
-      const chatTitle = `${policy.type.charAt(0).toUpperCase() + policy.type.slice(1)} Policy Summary - ${policy.domain}`;
+      const chatTitle = `${policy.type.charAt(0).toUpperCase() + policy.type.slice(1)} Policy Summary - ${policy.hostname}`;
       const chat = await ChatService.create({
         userId,
         title: chatTitle,
@@ -189,7 +188,7 @@ export class SummaryService extends SummaryDto {
 
       // Generate summary using LLM
       const {text: summary} = await generateText({
-        model: azureProvider.chat('gpt-4.1'),
+        model: openai.chat(LLM_MODEL),
         prompt: policy.content,
         system: SYSTEM_PROMPT,
       });

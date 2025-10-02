@@ -3,18 +3,22 @@ import {ChatDto} from '@/db/dto/chat';
 import {Router} from 'express';
 import {ZodError} from 'zod';
 import historyRouter from './history';
+import messageRouter from './message';
 
 const router: Router = Router();
 
-// GET /api/chat/history/:userId - Get paginated chat history for a user
+// GET /api/chat/history/ - Get paginated chat history for a user
 router.use('/history', historyRouter);
+
+// POST /api/chat/message - Create a new message
+router.use('/message', messageRouter);
 
 // GET /api/chat/:id - Get specific chat by ID
 router.get('/:id', async (req, res) => {
   try {
     const {id} = ChatDto.idDto.parse(req.params);
 
-    const chat = await ChatService.findByID({id});
+    const chat = await ChatService.findByID({where: {id}});
 
     res.json({
       chat,
@@ -22,7 +26,6 @@ router.get('/:id', async (req, res) => {
       message: 'Chat retrieved successfully',
     });
   } catch (error) {
-    console.error('Error getting chat by ID:', error);
     if (error instanceof ZodError) {
       return res.status(400).json({
         error: 'Validation error',
@@ -39,21 +42,20 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/chat - Create a new chat
+// POST /api/chat/:id - Continue a chat
 router.post('/:id', async (req, res) => {
   try {
     const {id} = ChatDto.idDto.parse(req.params);
     const chatData = ChatDto.continueChatDto.parse({id, message: req.body.message});
 
-    const chat = await ChatService.continue(chatData);
+    const chat = await ChatService.continueChat(chatData);
 
     res.json({
       chat,
       status: 'success',
-      message: 'Chat created successfully',
+      message: 'Chat continued successfully',
     });
   } catch (error) {
-    console.error('Error creating chat:', error);
     if (error instanceof ZodError) {
       return res.status(400).json({
         error: 'Validation error',
@@ -65,7 +67,7 @@ router.post('/:id', async (req, res) => {
     res.status(500).json({
       error: 'Internal server error',
       status: 'error',
-      message: 'Chat creation failed',
+      message: 'Chat continuation failed',
     });
   }
 });
@@ -84,7 +86,6 @@ router.put('/:id', async (req, res) => {
       message: 'Chat updated successfully',
     });
   } catch (error) {
-    console.error('Error updating chat:', error);
     if (error instanceof ZodError) {
       return res.status(400).json({
         error: 'Validation error',
@@ -113,7 +114,6 @@ router.delete('/:id', async (req, res) => {
       message: 'Chat deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting chat:', error);
     if (error instanceof ZodError) {
       return res.status(400).json({
         error: 'Validation error',
@@ -126,6 +126,35 @@ router.delete('/:id', async (req, res) => {
       error: 'Internal server error',
       status: 'error',
       message: 'Chat deletion failed',
+    });
+  }
+});
+
+// POST /api/chat - Create a new chat
+router.post('/', async (req, res) => {
+  try {
+    const data = ChatDto.createChatByLinkDto.parse(req.body);
+
+    const chat = await ChatService.createChatByLink(data);
+
+    res.json({
+      chat,
+      status: 'success',
+      message: 'Chat created by link successfully',
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues,
+        status: 'error',
+        message: 'Invalid request data',
+      });
+    }
+    res.status(500).json({
+      error: 'Internal server error',
+      status: 'error',
+      message: 'Chat creation by link failed',
     });
   }
 });

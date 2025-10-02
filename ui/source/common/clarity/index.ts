@@ -1,19 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-use-before-define */
-// Note: Chat history will be handled via message passing to avoid isolation issues
-
-// Declare Summarizer as a global object
-declare const Summarizer: {
-  availability({
-    monitor,
-  }: {
-    monitor?: (m: EventTarget) => void;
-  }): Promise<string>;
-  create(options: Record<string, unknown>): Promise<{
-    summarize(text: string): Promise<string>;
-  }>;
-};
-
 declare const chrome: {
   storage: {
     sync: {
@@ -22,49 +6,12 @@ declare const chrome: {
   };
 };
 
-declare const Translator: {
-  availability({
-    sourceLanguage,
-    targetLanguage,
-    monitor,
-  }: {
-    sourceLanguage: string;
-    targetLanguage: string;
-    monitor: (m: EventTarget) => void;
-  }): Promise<string>;
-  create({
-    sourceLanguage,
-    targetLanguage,
-  }: {
-    sourceLanguage: string;
-    targetLanguage: string;
-  }): Promise<{translate: (text: string) => Promise<string>}>;
-};
-
-declare const LanguageModel: {
-  availability({monitor}: {monitor: (m: EventTarget) => void}): Promise<string>;
-  create(data: any): Promise<{prompt: (data: any) => Promise<any>}>;
-  params(): Promise<any>;
-};
-
-declare const self: {
-  Translator: typeof Translator;
-  LanguageModel: typeof LanguageModel;
-};
-
 type Message = {
   chatId: string;
   id: string;
   role: 'user' | 'assistant' | 'system';
   parts: {
-    type:
-      | 'text'
-      | 'reasoning'
-      | 'source-url'
-      | 'source-document'
-      | 'file'
-      | 'step-start'
-      | 'step-end';
+    type: 'text' | 'reasoning' | 'source-url' | 'source-document' | 'file' | 'step-start' | 'step-end';
     text: string;
   }[];
   attachments: unknown[];
@@ -82,24 +29,87 @@ type Chat = {
 };
 
 const clarity = (category: string, externalLink?: string): void => {
+  const CLARITY_API_URL = 'http://localhost:3000/api';
+
+  const languages: Array<{
+    code: string;
+    name: string;
+    flag: string;
+  }> = [
+    {code: '', name: 'Translate', flag: '🌐'},
+    {code: 'en', name: 'English', flag: '🇺🇸'},
+    {code: 'es', name: 'Spanish', flag: '🇪🇸'},
+    {code: 'fr', name: 'French', flag: '🇫🇷'},
+    {code: 'de', name: 'German', flag: '🇩🇪'},
+    {code: 'it', name: 'Italian', flag: '🇮🇹'},
+    {code: 'pt', name: 'Portuguese', flag: '🇵🇹'},
+    {code: 'ru', name: 'Russian', flag: '🇷🇺'},
+    {code: 'ja', name: 'Japanese', flag: '🇯🇵'},
+    {code: 'ko', name: 'Korean', flag: '🇰🇷'},
+    {code: 'zh', name: 'Chinese', flag: '🇨🇳'},
+    {code: 'ar', name: 'Arabic', flag: '🇸🇦'},
+    {code: 'hi', name: 'Hindi', flag: '🇮🇳'},
+    {code: 'nl', name: 'Dutch', flag: '🇳🇱'},
+    {code: 'sv', name: 'Swedish', flag: '🇸🇪'},
+    {code: 'no', name: 'Norwegian', flag: '🇳🇴'},
+    {code: 'da', name: 'Danish', flag: '🇩🇰'},
+    {code: 'fi', name: 'Finnish', flag: '🇫🇮'},
+    {code: 'pl', name: 'Polish', flag: '🇵🇱'},
+    {code: 'tr', name: 'Turkish', flag: '🇹🇷'},
+    {code: 'th', name: 'Thai', flag: '🇹🇭'},
+    {code: 'ig', name: 'Igbo', flag: '🇳🇬'},
+    {code: 'ha', name: 'Hausa', flag: '🇳🇬'},
+    {code: 'yo', name: 'Yoruba', flag: '🇳🇬'},
+  ];
+
+  /**
+   * Format timestamp for display
+   */
+  const formatTimestamp = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const now2 = new Date();
+    const diffInHours = (now2.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+      return 'Just now';
+    }
+    if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h ago`;
+    }
+    if (diffInHours < 168) {
+      // 7 days
+      return `${Math.floor(diffInHours / 24)}d ago`;
+    }
+    return date.toLocaleDateString();
+  };
+
+  /**
+   * Chat ID generated from hostname, category and date
+   * For each day, a site and it's category will have a separate chat
+   */
+  const generateChatId = (userId: string): string => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const dateString = `${day}_${month}_${year}`;
+    const {hostname} = new URL(window.location.href);
+    return `${userId}_${hostname}_${category}_${dateString}`;
+  };
+
   // Don't you dare complain about this, you'll be fired.
   chrome.storage.sync.get('clarityUserId').then(({clarityUserId: userId}) => {
     /*
      *  Global variables
      */
     const cacheKey = `user_chats_${userId}`;
-    const CLARITY_API_URL = 'http://localhost:3000/api';
     const {hostname} = new URL(window.location.href);
 
     /**
      * Chat ID generated from hostname, category and date
+     * For each day, a site and it's category will have a separate chat
      */
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    const dateString = `${day}_${month}_${year}`;
-    let chatId = `${hostname}_${category}_${dateString}`;
+    let chatId = generateChatId(userId);
 
     // Track the current language state of each message
     const messageLanguageState = new Map<string, string>();
@@ -120,27 +130,7 @@ const clarity = (category: string, externalLink?: string): void => {
               outline: none;
               transition: border-color 0.2s;
             " onfocus="this.style.borderColor='#FF4A4A'" onblur="this.style.borderColor='#e0e0e0'">
-              <option value="">🌐 Translate</option>
-              <option value="en">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</option>
-              <option value="es">🇪🇸 Spanish</option>
-              <option value="fr">🇫🇷 French</option>
-              <option value="de">🇩🇪 German</option>
-              <option value="it">🇮🇹 Italian</option>
-              <option value="pt">🇵🇹 Portuguese</option>
-              <option value="ru">🇷🇺 Russian</option>
-              <option value="ja">🇯🇵 Japanese</option>
-              <option value="ko">🇰🇷 Korean</option>
-              <option value="zh">🇨🇳 Chinese</option>
-              <option value="ar">🇸🇦 Arabic</option>
-              <option value="hi">🇮🇳 Hindi</option>
-              <option value="nl">🇳🇱 Dutch</option>
-              <option value="sv">🇸🇪 Swedish</option>
-              <option value="no">🇳🇴 Norwegian</option>
-              <option value="da">🇩🇰 Danish</option>
-              <option value="fi">🇫🇮 Finnish</option>
-              <option value="pl">🇵🇱 Polish</option>
-              <option value="tr">🇹🇷 Turkish</option>
-              <option value="th">🇹🇭 Thai</option>
+              ${languages.map((language) => `<option value="${language.code}">${language.flag} ${language.name}</option>`).join('')}
       </select>
     `;
 
@@ -158,13 +148,12 @@ const clarity = (category: string, externalLink?: string): void => {
       messageId: string;
     }): void => {
       if (!targetLanguage) return;
-      if (!self.Translator) return;
+      if (!Translator) return;
 
       // Update the language state for this message
       messageLanguageState.set(messageId, targetLanguage);
       // Add a translation note
-      let translationNode: HTMLElement | null =
-        document.getElementById('translation-node');
+      let translationNode: HTMLElement | null = document.getElementById('translation-node');
       if (!translationNode) {
         translationNode = document.createElement('div');
         translationNode.id = 'translation-node';
@@ -183,36 +172,36 @@ const clarity = (category: string, externalLink?: string): void => {
       Translator.availability({
         sourceLanguage,
         targetLanguage,
-        monitor(m) {
-          // TODO: add a monitor for the Translator model that displays the progress in chat
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          m.addEventListener('downloadprogress', (e: any) => {
-            console.log(`Downloaded ${e.loaded * 100}%`);
-          });
-        },
       })
         .then(() => {
           Translator.create({
             sourceLanguage,
             targetLanguage,
-          }).then(
-            (translator: {translate: (text: string) => Promise<string>}) => {
-              translator
-                .translate(originalText)
-                .then((translatedText: string) => {
-                  messageElement.innerHTML = translatedText;
-                  if (translationNode) {
-                    translationNode.textContent = `🌐 Translated to ${targetLanguage.toUpperCase()}`;
-                    messageElement.appendChild(translationNode);
-                  }
-                })
-                .catch((error: Error) => {
-                  if (translationNode) {
-                    translationNode.innerHTML = `<div style="color: red;">Error translating content: ${error.message}</div>`;
-                  }
-                });
-            }
-          );
+            monitor: (m) => {
+              m.addEventListener('downloadprogress', (e: any) => {
+                console.log(`Downloaded ${e.loaded * 100}%`);
+                if (translationNode) {
+                  translationNode.textContent = `🌐 Downloading ${targetLanguage.toUpperCase()} translation...`;
+                  messageElement.appendChild(translationNode);
+                }
+              });
+            },
+          }).then((translator: {translate: (text: string) => Promise<string>}) => {
+            translator
+              .translate(originalText)
+              .then((translatedText: string) => {
+                messageElement.innerHTML = translatedText;
+                if (translationNode) {
+                  translationNode.textContent = `🌐 Translated to ${targetLanguage.toUpperCase()}`;
+                  messageElement.appendChild(translationNode);
+                }
+              })
+              .catch((error: Error) => {
+                if (translationNode) {
+                  translationNode.innerHTML = `<div style="color: red;">Error translating content: ${error.message}</div>`;
+                }
+              });
+          });
         })
         .catch((error: Error) => {
           if (translationNode) {
@@ -221,13 +210,9 @@ const clarity = (category: string, externalLink?: string): void => {
         });
     };
 
-    const attachEventListenersToTranslateSelector = (
-      messages: Message[]
-    ): void => {
+    const attachEventListenersToTranslateSelector = (messages: Message[]): void => {
       messages.forEach((message) => {
-        const translateSelector = document.querySelector(
-          `[data-message-id="${message.id}"]`
-        ) as HTMLSelectElement;
+        const translateSelector = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLSelectElement;
         if (translateSelector) {
           translateSelector.addEventListener('change', (): void => {
             const selectedLanguage = translateSelector.value;
@@ -235,8 +220,7 @@ const clarity = (category: string, externalLink?: string): void => {
               const targetMessage = document.getElementById(message.id);
               if (targetMessage) {
                 // Get current language state or default to 'en'
-                const currentSourceLanguage =
-                  messageLanguageState.get(message.id) || 'en';
+                const currentSourceLanguage = messageLanguageState.get(message.id) || 'en';
                 translateContent({
                   sourceLanguage: currentSourceLanguage,
                   targetLanguage: selectedLanguage,
@@ -251,27 +235,6 @@ const clarity = (category: string, externalLink?: string): void => {
           });
         }
       });
-    };
-
-    /**
-     * Format timestamp for display
-     */
-    const formatTimestamp = (timestamp: number): string => {
-      const date = new Date(timestamp);
-      const now2 = new Date();
-      const diffInHours = (now2.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-      if (diffInHours < 1) {
-        return 'Just now';
-      }
-      if (diffInHours < 24) {
-        return `${Math.floor(diffInHours)}h ago`;
-      }
-      if (diffInHours < 168) {
-        // 7 days
-        return `${Math.floor(diffInHours / 24)}d ago`;
-      }
-      return date.toLocaleDateString();
     };
 
     /**
@@ -294,21 +257,13 @@ const clarity = (category: string, externalLink?: string): void => {
       const drawer = document.getElementById('history-drawer');
       const overlay = document.getElementById('drawer-overlay');
 
-      const historyItem = document.querySelector(
-        `.history-item[data-chat-id="${chatId}"]`
-      );
+      const historyItem = document.querySelector(`.history-item[data-chat-id="${chatId}"]`);
       if (historyItem) {
         historyItem.setAttribute('data-active', 'true');
         (historyItem as HTMLElement).style.backgroundColor = '#FF4A4A';
-        const titleEl = historyItem.querySelector(
-          '.history_item_text'
-        ) as HTMLElement;
-        const timestampEl = historyItem.querySelector(
-          'div[style*="font-size: 12px"]'
-        ) as HTMLElement;
-        const deleteBtn = historyItem.querySelector(
-          '.delete-btn'
-        ) as HTMLElement;
+        const titleEl = historyItem.querySelector('.history_item_text') as HTMLElement;
+        const timestampEl = historyItem.querySelector('div[style*="font-size: 12px"]') as HTMLElement;
+        const deleteBtn = historyItem.querySelector('.delete-btn') as HTMLElement;
         if (titleEl) titleEl.style.color = 'white';
         if (timestampEl) timestampEl.style.color = 'rgba(255, 255, 255, 0.8)';
         if (deleteBtn) deleteBtn.style.color = 'rgba(255, 255, 255, 0.8)';
@@ -340,10 +295,7 @@ const clarity = (category: string, externalLink?: string): void => {
       if (history && history.length > 0) {
         return history
           .map((chat) => {
-            const titleToDisplay =
-              chat.title.length > 35
-                ? `${chat.title.slice(0, 35)}...`
-                : chat.title;
+            const titleToDisplay = chat.title.length > 35 ? `${chat.title.slice(0, 35)}...` : chat.title;
             return `
            <div class="history-item" data-chat-id="${chat.id}" style="
              padding: 16px;
@@ -447,9 +399,7 @@ const clarity = (category: string, externalLink?: string): void => {
 
           data.cachedAt = Date.now(); // Update cache timestamp
           localStorage.setItem(cacheKey, JSON.stringify(data));
-          const newCachedData = JSON.parse(
-            localStorage.getItem(cacheKey) ?? JSON.stringify({chats: []})
-          );
+          const newCachedData = JSON.parse(localStorage.getItem(cacheKey) ?? JSON.stringify({chats: []}));
           return newCachedData.chats;
         } catch (error) {
           console.error('Error updating chat history cache:', error);
@@ -473,20 +423,16 @@ const clarity = (category: string, externalLink?: string): void => {
       const cachedData = localStorage.getItem(cacheKey);
       if (cachedData) {
         const data = JSON.parse(cachedData);
-        data.chats
-          .find((v: Chat) => v.id === message.chatId)
-          .messages.push(message);
+        data.chats.find((v: Chat) => v.id === message.chatId).messages.push(message);
         localStorage.setItem(cacheKey, JSON.stringify(data));
       }
     };
 
-    const checkForChatInHistoryByUserId = (targetChatId: string): boolean => {
+    const checkForChatInHistoryByChatId = (targetChatId: string): boolean => {
       const cachedData = localStorage.getItem(cacheKey);
       if (cachedData) {
         const data = JSON.parse(cachedData);
-        return data.chats.some(
-          (chat: {id: string}) => chat.id === targetChatId
-        );
+        return data.chats.some((chat: {id: string}) => chat.id === targetChatId);
       }
       return false;
     };
@@ -495,37 +441,25 @@ const clarity = (category: string, externalLink?: string): void => {
       const cachedData = localStorage.getItem(cacheKey);
       if (cachedData) {
         const data = JSON.parse(cachedData);
-        data.chats.find((v: {id: string}) => v.id === chat.id).messages =
-          chat.messages;
+        data.chats.find((v: {id: string}) => v.id === chat.id).messages = chat.messages;
         data.cachedAt = Date.now();
         localStorage.setItem(cacheKey, JSON.stringify(data));
         console.log('Chat replaced in history cache');
       }
     };
 
-    const attachHistoryEventListeners = ({
-      loadChatFromHistory,
-      deleteChatFromHistory,
-    }: {
-      deleteChatFromHistory: (
-        id: string,
-        loadChatFromHistory: (newChatId: string) => void
-      ) => void;
-      loadChatFromHistory: (newChatId: string) => void;
-    }): void => {
+    const attachHistoryEventListeners = (): void => {
       // Attach click listeners to history items
-      document
-        .querySelectorAll('.history-item')
-        .forEach((item: Element): void => {
-          const newChatId = item.getAttribute('data-chat-id');
-          if (newChatId) {
-            item.addEventListener('click', (): void => {
-              chatId = newChatId;
-              destroyPromptSession();
-              loadChatFromHistory(newChatId);
-            });
-          }
-        });
+      document.querySelectorAll('.history-item').forEach((item: Element): void => {
+        const newChatId = item.getAttribute('data-chat-id');
+        if (newChatId) {
+          item.addEventListener('click', (): void => {
+            chatId = newChatId;
+            destroyPromptSession();
+            loadChatFromHistory(newChatId);
+          });
+        }
+      });
 
       // Attach click listeners to delete buttons
       document.querySelectorAll('.delete-btn').forEach((btn) => {
@@ -534,16 +468,13 @@ const clarity = (category: string, externalLink?: string): void => {
           btn.addEventListener('click', (e: Event): void => {
             e.stopPropagation();
             destroyPromptSession();
-            deleteChatFromHistory(id, loadChatFromHistory);
+            deleteChatFromHistory(id);
           });
         }
       });
     };
 
-    const deleteChatFromHistory = (
-      id: string,
-      loadChatFromHistory: (newChatId: string) => void
-    ): void => {
+    const deleteChatFromHistory = (id: string): void => {
       const history = getChatHistory();
       const filteredHistory = history.filter((chat) => chat.id !== id);
       localStorage.setItem(cacheKey, JSON.stringify(filteredHistory));
@@ -555,17 +486,13 @@ const clarity = (category: string, externalLink?: string): void => {
         historyList.innerHTML = renderHistoryList(updatedHistory);
 
         // Reattach event listeners after updating the HTML
-        attachHistoryEventListeners({
-          loadChatFromHistory,
-          deleteChatFromHistory,
-        });
+        attachHistoryEventListeners();
       }
     };
 
     /**
      * UI Building blocks helper functions
      */
-
     const chatHeader = `
     <!-- Header -->
     <div style="
@@ -604,8 +531,10 @@ const clarity = (category: string, externalLink?: string): void => {
         align-items: center; 
         justify-content: center;
         transition: background-color 0.2s;
-      " onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
-        </div>`;
+        " 
+        onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
+    </div>
+    `;
 
     const appDrawer = `
     <!-- App Drawer Overlay -->
@@ -661,7 +590,7 @@ const clarity = (category: string, externalLink?: string): void => {
                 cursor: pointer;
                 transition: transform 0.2s;
               " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="User Profile">
-                ${hostname.charAt(0).toUpperCase()}
+                ${userId.charAt(0).toUpperCase()}
               </div>
               <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">History</h3>
             </div>
@@ -776,7 +705,14 @@ const clarity = (category: string, externalLink?: string): void => {
     </div>
   `;
 
-    const loadingIndicator = `
+    const generateLoadingIndicator = (): HTMLDivElement => {
+      const typingIndicator = document.createElement('div');
+      typingIndicator.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  `;
+      typingIndicator.innerHTML = `
     <span>Thinking</span>
     <div style="display: flex; gap: 2px;">
       <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
@@ -784,11 +720,10 @@ const clarity = (category: string, externalLink?: string): void => {
       <div style="width: 4px; height: 4px; background-color: #999; border-radius: 50%; animation: typing 1.4s infinite ease-in-out 0.4s;"></div>
     </div>
   `;
+      return typingIndicator;
+    };
 
-    const generateUserMessage = (
-      content: string,
-      timestamp: number
-    ): string => {
+    const generateUserMessage = (content: string, timestamp: number): string => {
       return `
       <div style="
         display: flex;
@@ -800,7 +735,7 @@ const clarity = (category: string, externalLink?: string): void => {
             color: white; 
             padding: 12px 16px; 
             border-radius: 16px 16px 4px 16px; 
-            max-width: 80%; 
+            max-width: 90%; 
             align-self: flex-end;
             font-size: 14px;
             line-height: 24px;
@@ -875,10 +810,12 @@ const clarity = (category: string, externalLink?: string): void => {
       content,
       id,
       timestamp,
+      translate = true,
     }: {
       content: string;
       id: string;
       timestamp: number;
+      translate?: boolean;
     }): string => {
       return `
       <div style="
@@ -932,7 +869,7 @@ const clarity = (category: string, externalLink?: string): void => {
               align-items: center;
               gap: 8px;
             ">
-              ${languageSelector(id)}
+              ${translate ? languageSelector(id) : ''}
             </div>
           </div>
         </div>
@@ -960,7 +897,8 @@ const clarity = (category: string, externalLink?: string): void => {
     };
 
     const loadChatFromHistory = (newChatId: string): string | null => {
-      const chat = getChatHistory().find((c) => c.id === newChatId);
+      const chatHistory = getChatHistory();
+      const chat = chatHistory.find((c) => c.id === newChatId);
       if (!chat) {
         closeHistoryDrawer(); // Close the drawer after loading
         showChatUI(
@@ -968,6 +906,7 @@ const clarity = (category: string, externalLink?: string): void => {
             content: 'Could not find chat in history',
             id: 'error_find_chat_in_history',
             timestamp: new Date().getTime(),
+            translate: false,
           })
         );
         return null;
@@ -991,6 +930,12 @@ const clarity = (category: string, externalLink?: string): void => {
       closeHistoryDrawer(); // Close the drawer after loading
       showChatUI(contentTxt);
       attachEventListenersToTranslateSelector(chat.messages);
+      const history = renderHistoryList(chatHistory);
+      const historyList = document.getElementById('history-list');
+      if (historyList) {
+        historyList.innerHTML = history;
+        attachHistoryEventListeners();
+      }
       return contentTxt;
     };
 
@@ -1010,9 +955,7 @@ const clarity = (category: string, externalLink?: string): void => {
       })
         .then((response) => response.json())
         .then((result: {chat: Message}) => {
-          const aiResponse = result.chat.parts
-            .map((part) => part.text)
-            .join('');
+          const aiResponse = result.chat.parts.map((part) => part.text).join('');
 
           if (aiResponse) {
             responseMessage.innerHTML = `<div style="
@@ -1071,20 +1014,20 @@ const clarity = (category: string, externalLink?: string): void => {
             addMessageToChat(result.chat);
           } else {
             responseMessage.innerHTML = generateResponseMessage({
-              content:
-                "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
+              content: "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
               id: 'error_generate_response',
               timestamp: new Date().getTime(),
+              translate: false,
             });
           }
         })
         .catch((error) => {
           console.log('🚀 ~ handleChat ~ error:', error);
           responseMessage.innerHTML = generateResponseMessage({
-            content:
-              "<p style='color: red;'>An error occurred. Please try again.</p>",
+            content: "<p style='color: red;'>An error occurred. Please try again.</p>",
             id: 'error_generate_response',
             timestamp: new Date().getTime(),
+            translate: false,
           });
         })
         .finally(() => {
@@ -1095,67 +1038,80 @@ const clarity = (category: string, externalLink?: string): void => {
     };
 
     let promptSession: any;
-    const handleChatWithChromeLLM = (
-      question: string,
-      responseMessage: HTMLElement,
-      chatContent: HTMLElement | null
-    ): void => {
-      if (!self.LanguageModel) return;
-      const previousMessages = getChatHistory().find(
-        (c) => c.id === chatId
-      )?.messages;
+    const handleChatWithChromeLLM = ({
+      question,
+      responseMessage,
+      chatContent,
+      previousMessages,
+    }: {
+      question: string;
+      responseMessage: HTMLElement;
+      chatContent: HTMLElement | null;
+      previousMessages: Message[];
+    }): void => {
+      if (!LanguageModel) return;
       if (!promptSession) {
-        self.LanguageModel.availability({
-          monitor(m) {
-            m.addEventListener('downloadprogress', (e: any) => {
-              console.log(`Downloaded ${e.loaded * 100}%`);
-            });
-          },
-        }).then((availability) => {
+        LanguageModel.availability({}).then((availability) => {
           if (availability === 'unavailable') {
             responseMessage.innerHTML = generateResponseMessage({
               content: 'Language model is unavailable',
               id: 'error_language_model_unavailable',
               timestamp: new Date().getTime(),
+              translate: false,
             });
             throw new Error('Language model is unavailable');
           }
         });
-        self.LanguageModel.create({
+        LanguageModel.create({
           initialPrompts: [
-            {
-              role: 'system',
-              content:
-                'You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.',
-            },
-            ...(previousMessages || []).map((message) => ({
-              role: message.role,
+            ...previousMessages.map((message) => ({
+              role: message.role as LanguageModelMessageRole,
               content: message.parts.map((part) => part.text).join(''),
             })),
           ],
         }).then((model) => {
           promptSession = model;
           model.prompt(question).then((response) => {
+            const message: Message = {
+              id: `assistant_response_${new Date().getTime()}`,
+              role: 'assistant' as const,
+              parts: [{type: 'text', text: response}],
+              attachments: [],
+              createdAt: new Date().toISOString(),
+              chatId: chatId,
+            };
             responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
               content: response,
-              id: `assistant_response_${new Date().getTime()}`,
+              id: message.id,
               timestamp: new Date().getTime(),
             });
             if (chatContent) {
               chatContent.scrollTop = chatContent.scrollHeight;
             }
+            attachEventListenersToTranslateSelector([message]);
+            // TODO: Save the message to the database
           });
         });
       } else {
         promptSession.prompt(question).then((response: string) => {
+          const message: Message = {
+            id: `assistant_response_${new Date().getTime()}`,
+            role: 'assistant' as const,
+            parts: [{type: 'text', text: response}],
+            attachments: [],
+            createdAt: new Date().toISOString(),
+            chatId: chatId,
+          };
           responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
             content: response,
-            id: `assistant_response_${new Date().getTime()}`,
+            id: message.id,
             timestamp: new Date().getTime(),
           });
           if (chatContent) {
             chatContent.scrollTop = chatContent.scrollHeight;
           }
+          attachEventListenersToTranslateSelector([message]);
+          // TODO: Save the message to the database
         });
       }
     };
@@ -1172,18 +1128,13 @@ const clarity = (category: string, externalLink?: string): void => {
 
       // Create user message bubble
       const userMessage = document.createElement('div');
-      userMessage.innerHTML = generateUserMessage(
-        question,
-        new Date().getTime()
-      );
+      userMessage.innerHTML = generateUserMessage(question, new Date().getTime());
       const chatContent = document.getElementById('chat-content');
       if (chatContent) {
         chatContent.appendChild(userMessage);
       }
 
-      const chatInput = document.getElementById(
-        'chat-input'
-      ) as HTMLInputElement;
+      const chatInput = document.getElementById('chat-input') as HTMLInputElement;
       if (chatInput) {
         chatInput.value = '';
       }
@@ -1197,7 +1148,7 @@ const clarity = (category: string, externalLink?: string): void => {
         background-color: #f0f0f0; 
         padding: 12px 16px; 
         border-radius: 16px 16px 16px 4px; 
-        max-width: 80%; 
+        max-width: 90%; 
         align-self: flex-start;
         font-size: 14px;
         line-height: 24px;
@@ -1208,17 +1159,7 @@ const clarity = (category: string, externalLink?: string): void => {
         text-align: left;
       `;
 
-      // Add typing indicator
-      const typingIndicator = document.createElement('div');
-      typingIndicator.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      `;
-
-      typingIndicator.innerHTML = loadingIndicator;
-
-      responseMessage.appendChild(typingIndicator);
+      responseMessage.appendChild(generateLoadingIndicator());
       if (chatContent) {
         chatContent.appendChild(responseMessage);
         chatContent.scrollTop = chatContent.scrollHeight;
@@ -1241,7 +1182,27 @@ const clarity = (category: string, externalLink?: string): void => {
         if (llmProvider === 'server') {
           handleChatWithServerLLM(question, responseMessage, chatContent);
         } else {
-          handleChatWithChromeLLM(question, responseMessage, chatContent);
+          handleChatWithChromeLLM({
+            question,
+            responseMessage,
+            chatContent,
+            previousMessages: [
+              {
+                id: 'system_message',
+                parts: [
+                  {
+                    type: 'text',
+                    text: 'You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.',
+                  },
+                ],
+                attachments: [],
+                createdAt: new Date().toISOString(),
+                chatId: chatId,
+                role: 'system' as const,
+              },
+              ...(getChatHistory().find((c) => c.id === chatId)?.messages || []),
+            ],
+          });
         }
       });
     };
@@ -1252,8 +1213,7 @@ const clarity = (category: string, externalLink?: string): void => {
       if (!chatUI) {
         // Add Urbanist font
         const fontLink = document.createElement('link');
-        fontLink.href =
-          'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap';
+        fontLink.href = 'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
 
@@ -1263,6 +1223,7 @@ const clarity = (category: string, externalLink?: string): void => {
               position: fixed;
               bottom: 20px;
               right: 20px;
+              cursor: auto !important;
               width: 375px;
               height: 600px;
               background-color: white;
@@ -1288,13 +1249,8 @@ const clarity = (category: string, externalLink?: string): void => {
         }, 10);
       }
 
-      chatUI.innerHTML = `
-        ${getChatScaffold(content)}    
-      `;
-      attachHistoryEventListeners({
-        loadChatFromHistory,
-        deleteChatFromHistory,
-      });
+      chatUI.innerHTML = getChatScaffold(content);
+      attachHistoryEventListeners();
 
       const closeBtn = document.getElementById('close-chat-btn');
       if (closeBtn) {
@@ -1343,21 +1299,14 @@ const clarity = (category: string, externalLink?: string): void => {
       document.addEventListener('click', (e: Event) => {
         const drawer = document.getElementById('history-drawer');
         const hamburgerBtn2 = document.getElementById('hamburger-menu-btn');
-        const isClickOnHamburger =
-          hamburgerBtn2 && hamburgerBtn2.contains(e.target as Node);
+        const isClickOnHamburger = hamburgerBtn2 && hamburgerBtn2.contains(e.target as Node);
 
-        if (
-          drawer &&
-          !drawer.contains(e.target as Node) &&
-          !isClickOnHamburger
-        ) {
+        if (drawer && !drawer.contains(e.target as Node) && !isClickOnHamburger) {
           closeHistoryDrawer();
         }
       });
 
-      const chatInput = document.getElementById(
-        'chat-input'
-      ) as HTMLInputElement;
+      const chatInput = document.getElementById('chat-input') as HTMLInputElement;
       const chatSendBtn = document.getElementById('chat-send-btn');
 
       if (chatSendBtn && chatInput) {
@@ -1386,7 +1335,6 @@ const clarity = (category: string, externalLink?: string): void => {
       contentCategory: string;
       userMessage: string;
     }): void => {
-      // If no cached content, proceed with API call
       fetch(`${CLARITY_API_URL}/summary`, {
         method: 'POST',
         headers: {
@@ -1394,7 +1342,6 @@ const clarity = (category: string, externalLink?: string): void => {
         },
         body: JSON.stringify({
           link: url,
-          domain: hostname,
           type: contentCategory,
           userId,
           chatId,
@@ -1403,35 +1350,31 @@ const clarity = (category: string, externalLink?: string): void => {
       })
         .then((response) => response.json())
         .then((result: {chat: Chat}) => {
-          if (result.chat && checkForChatInHistoryByUserId(result.chat.id)) {
-            // Replace existing chat in history
-            replaceMessageInChatToHistory(result.chat);
-          } else if (result.chat) {
-            // Add new chat to history
-            const chats = addNewChatToHistory(result.chat);
-            const history = renderHistoryList(chats);
-            const historyList = document.getElementById('history-list');
-            if (historyList) {
-              historyList.innerHTML = history;
-              attachHistoryEventListeners({
-                loadChatFromHistory,
-                deleteChatFromHistory,
-              });
+          if (result.chat) {
+            // This use case rarely occurs
+            if (checkForChatInHistoryByChatId(result.chat.id)) {
+              // Replace existing chat in history
+              replaceMessageInChatToHistory(result.chat);
+            } else {
+              // Add new chat to history
+              // We are saving the entire chat to the history since we didn't save when the chat was created
+              const chats = addNewChatToHistory(result.chat);
+              const history = renderHistoryList(chats);
+              const historyList = document.getElementById('history-list');
+              if (historyList) {
+                historyList.innerHTML = history;
+                attachHistoryEventListeners();
+              }
             }
           }
-
           /*
            * Since this function is called only when a new chat is created,
            * We will only render the message from the assistant.
            */
+          const assistantMessage = result.chat.messages.find((message: {role: string}) => message.role === 'assistant');
 
-          const assistantMessage = result.chat.messages.find(
-            (message: {role: string}) => message.role === 'assistant'
-          );
-
-          // TODO: Handle the case where there is no assistant message
           if (!assistantMessage) {
-            messageElement.innerHTML = `<div style="color: red;">Error summarizing content: No assistant message found</div>`;
+            messageElement.innerHTML = `<div style="color: red;">We could not generate a response for that.</div>`;
             return;
           }
 
@@ -1444,9 +1387,7 @@ const clarity = (category: string, externalLink?: string): void => {
            * With multiple parts and multi modal support,
            * This will be re-implemented in the future.
            */
-          const messageParts = assistantMessage.parts
-            .map((part: {text: string}) => part.text)
-            .join(' ');
+          const messageParts = assistantMessage.parts.map((part: {text: string}) => part.text).join(' ');
 
           messageElement.innerHTML = generateResponseMessageWithoutOuterDiv({
             content: messageParts,
@@ -1467,62 +1408,70 @@ const clarity = (category: string, externalLink?: string): void => {
       return;
     }
 
-    const cachePolicy = localStorage.getItem(`${hostname}_${category}`);
     /**
      * Find the link for the given terms
      * Start of something else
      */
-
+    // TODO: Handle the case where there is no external link
     let internalLink = externalLink!;
+
+    //  Try to get the link from localStorage which was stored by the ContentScript
+    const cachePolicy = localStorage.getItem(`${hostname}_${category}`);
     if (cachePolicy) {
       const policy = JSON.parse(cachePolicy);
       internalLink = policy.link;
     }
 
+    // If no link found in localStorage, show error
     if (!internalLink) {
       showChatUI(
         generateResponseMessage({
-          content: `<p style="color: red;">Could not find a link for ${category} of ${hostname}.</p>`,
+          content: `<p style="color: red;">Link for ${category} of ${hostname} not on the current page and not in our database yet.</p>`,
           id: 'error_find_link',
           timestamp: new Date().getTime(),
+          translate: false,
         })
       );
       return;
     }
 
-    if (checkForChatInHistoryByUserId(chatId)) {
+    // If chat exists in history, show it and load messages from history
+    if (checkForChatInHistoryByChatId(chatId)) {
       const chat = getChatHistory().find((c) => c.id === chatId);
-      if (chat) {
-        const contentTxt = chat.messages
-          .map((message) => {
-            if (message.role === 'user') {
-              return generateUserMessage(
-                message.parts.map((part) => part.text).join(''),
-                new Date(message.createdAt).getTime()
-              );
-            }
-            return generateResponseMessage({
-              content: message.parts.map((part) => part.text).join(''),
-              id: message.id,
-              timestamp: new Date(message.createdAt).getTime(),
-            });
+      if (!chat) {
+        showChatUI(
+          generateResponseMessage({
+            content: `<p style="color: red;">Could not find chat in history.</p>`,
+            id: 'error_find_chat_in_history',
+            timestamp: new Date().getTime(),
+            translate: false,
           })
-          .join('');
-        showChatUI(contentTxt);
-        attachEventListenersToTranslateSelector(chat.messages);
+        );
         return;
       }
 
-      showChatUI(
-        generateResponseMessage({
-          content: `<p style="color: red;">Could not find chat in history.</p>`,
-          id: 'error_find_chat_in_history',
-          timestamp: new Date().getTime(),
+      // Generate the content of the chat
+      const contentTxt = chat.messages
+        .map((message) => {
+          if (message.role === 'user') {
+            return generateUserMessage(
+              message.parts.map((part) => part.text).join(''),
+              new Date(message.createdAt).getTime()
+            );
+          }
+          return generateResponseMessage({
+            content: message.parts.map((part) => part.text).join(''),
+            id: message.id,
+            timestamp: new Date(message.createdAt).getTime(),
+          });
         })
-      );
+        .join('');
+      showChatUI(contentTxt);
+      attachEventListenersToTranslateSelector(chat.messages);
       return;
     }
 
+    // If no chat exists in history, start a new chat
     showChatUI('');
 
     const chatContent = document.getElementById('chat-content');
@@ -1532,56 +1481,37 @@ const clarity = (category: string, externalLink?: string): void => {
           content: `<p style="color: red;">Could not find chat content</p>`,
           id: 'error_find_chat_content',
           timestamp: new Date().getTime(),
+          translate: false,
         })
       );
       return;
     }
 
     const userMessage = document.createElement('div');
-    userMessage.style.cssText = `
-      background-color: #FF4A4A; 
-      color: white; 
-      padding: 12px 16px; 
-      border-radius: 16px 16px 4px 16px; 
-      max-width: 80%; 
-      align-self: flex-end;
-      font-size: 14px;
-      line-height: 24px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 4px rgba(255, 74, 74, 0.2);
-      text-align: right;
-    `;
-    userMessage.innerHTML = `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`;
+    userMessage.innerHTML = generateUserMessage(
+      `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`,
+      new Date().getTime()
+    );
     userMessage.id = 'initial-user-message';
     chatContent.appendChild(userMessage);
 
     // Create AI response bubble with loading state
     const responseMessage = document.createElement('div');
     responseMessage.style.cssText = `
-    background-color: #f0f0f0; 
-    padding: 12px 16px; 
-    border-radius: 16px 16px 16px 4px; 
-    max-width: 90%; 
-    align-self: flex-start;
-    font-size: 14px;
-    line-height: 24px;
-    color: #333;
-    margin-bottom: 16px;
-    position: relative;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: left;
-  `;
-
-    // Add typing indicator
-    const typingIndicator = document.createElement('div');
-    typingIndicator.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  `;
-    typingIndicator.innerHTML = loadingIndicator;
-
-    responseMessage.appendChild(typingIndicator);
+      background-color: #f0f0f0; 
+      padding: 12px 16px; 
+      border-radius: 16px 16px 16px 4px; 
+      max-width: 90%; 
+      align-self: flex-start;
+      font-size: 14px;
+      line-height: 24px;
+      color: #333;
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    `;
+    responseMessage.appendChild(generateLoadingIndicator());
     chatContent.appendChild(responseMessage);
     chatContent.scrollTop = chatContent.scrollHeight;
 
@@ -1598,213 +1528,136 @@ const clarity = (category: string, externalLink?: string): void => {
       document.head.appendChild(style);
     }
 
-    const browserSummarize = (
-      link: string,
-      responseElement: HTMLElement
-    ): void => {
-      fetch(`${CLARITY_API_URL}/gethtml?url=${encodeURIComponent(link)}`, {
-        method: 'GET',
+    const browserSummarize = ({
+      link,
+      responseElement,
+      category,
+      userMessage,
+    }: {
+      link: string;
+      responseElement: HTMLElement;
+      category: string;
+      userMessage: string;
+    }): void => {
+      fetch(`${CLARITY_API_URL}/chat`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          link,
+          // domain: origin,
+          type: category,
+          userId,
+          chatId,
+          message: userMessage,
+          title: userMessage,
+        }),
       })
         .then((response) => response.json())
-        .then((result) => {
-          Summarizer.availability({
-            monitor: (m: EventTarget) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              m.addEventListener('downloadprogress', (e: any) => {
-                console.log(`Downloaded ${e.loaded * 100}%`);
-              });
-            },
-          }).then((status: string) => {
-            if (status !== 'available') {
-              return;
-            }
-
-            const options = {
-              sharedContext:
-                'This article is meant for non-technical users. Please summarize the article in a way that is easy to understand.',
-              type: 'key-points',
-              format: 'markdown',
-              length: 'medium',
-              // TODO: add a monitor for the summarizer that displays the progress in chat
-              monitor(m: EventTarget): void {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                m.addEventListener('downloadprogress', (e: any) => {
-                  console.log(`Downloaded ${e.loaded * 100}%`);
-                });
-              },
-            };
-
-            Summarizer.create(options).then(
-              (summarizer: {summarize: (text: string) => Promise<string>}) => {
-                // Process chunks if available, otherwise use full text
-                if (result.textChunks && result.textChunks.length > 0) {
-                  // Create array of promises for all chunk summarizations
-                  const summarizationPromises = result.textChunks.map(
-                    (chunk: string) => summarizer.summarize(chunk)
-                  );
-
-                  // Wait for all summarizations to complete
-                  Promise.all(summarizationPromises)
-                    .then((chunkSummaries: string[]) => {
-                      // Combine all chunk summaries
-                      const combinedSummary = chunkSummaries.join(' ');
-
-                      // Generate unique ID for this message
-                      const messageId = `message-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-                      // Initialize language state for this message (default to 'en')
-                      messageLanguageState.set(messageId, 'en');
-
-                      responseElement.innerHTML = `
-                    <div style="white-space: pre-wrap;" id="${messageId}">${combinedSummary}</div>
-                    <div style="
-                      margin-top: 12px;
-                      padding-top: 8px;
-                      border-top: 1px solid #e0e0e0;
-                      display: flex;
-                      align-items: center;
-                      gap: 8px;
-                    ">
-                      ${languageSelector(messageId)}
-                    </div>
-        `;
-
-                      // Add event listener for this specific message's translate button
-                      const translateSelector = responseElement.querySelector(
-                        `[data-message-id="${messageId}"]`
-                      ) as HTMLSelectElement;
-                      if (translateSelector) {
-                        translateSelector.addEventListener(
-                          'change',
-                          (): void => {
-                            const selectedLanguage = translateSelector.value;
-                            if (selectedLanguage) {
-                              const targetMessage =
-                                document.getElementById(messageId);
-                              if (targetMessage) {
-                                // Get current language state or default to 'en'
-                                const currentSourceLanguage =
-                                  messageLanguageState.get(messageId) || 'en';
-                                translateContent({
-                                  sourceLanguage: currentSourceLanguage,
-                                  targetLanguage: selectedLanguage,
-                                  messageElement: targetMessage,
-                                  originalText: combinedSummary,
-                                  messageId,
-                                });
-                              }
-                              // Reset the selector
-                              translateSelector.value = selectedLanguage;
-                            }
-                          }
-                        );
-                      }
-                    })
-                    .catch((error: unknown) => {
-                      responseElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error}</div>`;
-                    });
-                } else {
-                  summarizer
-                    .summarize(result.text)
-                    .then((c: string) => {
-                      // Generate unique ID for this message
-                      const messageId = `message-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-                      // Initialize language state for this message (default to 'en')
-                      messageLanguageState.set(messageId, 'en');
-
-                      responseElement.innerHTML = `
-                  <div style="
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                  ">
-                    <style>
-                      .clarity-content ul {
-                        margin: 8px 0;
-                        padding-left: 20px;
-                      }
-                      .clarity-content li {
-                        margin: 4px 0;
-                      }
-                      .clarity-content p {
-                        margin: 8px 0;
-                      }
-                      .clarity-content b {
-                        font-weight: 600;
-                      }
-                    </style>
-                    <div class="clarity-content" id="${messageId}">${c}</div>
-                    <div style="
-                      margin-top: 12px;
-                      padding-top: 8px;
-                      border-top: 1px solid #e0e0e0;
-                      display: flex;
-                      align-items: center;
-                      gap: 8px;
-                    ">
-                      ${languageSelector(messageId)}
-                    </div>
-                  </div>
-        `;
-
-                      // Add event listener for this specific message's translate button
-                      const translateSelector = responseElement.querySelector(
-                        `[data-message-id="${messageId}"]`
-                      ) as HTMLSelectElement;
-                      if (translateSelector) {
-                        translateSelector.addEventListener(
-                          'change',
-                          (): void => {
-                            const selectedLanguage = translateSelector.value;
-                            if (selectedLanguage) {
-                              const targetMessage =
-                                document.getElementById(messageId);
-                              if (targetMessage) {
-                                // Get current language state or default to 'en'
-                                const currentSourceLanguage =
-                                  messageLanguageState.get(messageId) || 'en';
-                                translateContent({
-                                  sourceLanguage: currentSourceLanguage,
-                                  targetLanguage: selectedLanguage,
-                                  messageElement: targetMessage,
-                                  originalText: c,
-                                  messageId,
-                                });
-                              }
-                              // Reset the selector
-                              translateSelector.value = selectedLanguage;
-                            }
-                          }
-                        );
-                      }
-                    })
-                    .catch((error: unknown) => {
-                      console.error('Error processing full text:', error);
-                    });
-                }
-              }
+        .then((result: {chat: Chat}) => {
+          if (!result.chat) {
+            showChatUI(
+              generateResponseMessage({
+                content: `<p style="color: red;">Error creating chat</p>`,
+                id: 'error_create_chat',
+                timestamp: new Date().getTime(),
+                translate: false,
+              })
             );
-          });
+            return;
+          }
+
+          const chat = result.chat;
+          const systemMessages = chat.messages
+            .filter((message) => message.role === 'system')
+            .map((message) => ({
+              role: message.role as LanguageModelMessageRole,
+              content: message.parts.map((part) => part.text).join(''),
+            }));
+
+          const messages = chat.messages.filter((message) => message.role !== 'system');
+          chat.messages = messages;
+          const history = renderHistoryList([chat]);
+          const historyList = document.getElementById('history-list');
+          if (historyList) {
+            historyList.innerHTML = history;
+          }
+
+          if (!LanguageModel) return;
+
+          if (!promptSession) {
+            LanguageModel.availability({}).then((availability) => {
+              if (availability === 'unavailable') {
+                responseMessage.innerHTML = generateResponseMessage({
+                  content: 'Language model is unavailable',
+                  id: 'error_language_model_unavailable',
+                  timestamp: new Date().getTime(),
+                  translate: false,
+                });
+                throw new Error('Language model is unavailable');
+              }
+            });
+            LanguageModel.create({
+              initialPrompts: systemMessages,
+            }).then((model) => {
+              promptSession = model;
+              model.prompt(userMessage).then((response) => {
+                const message: Message = {
+                  id: `assistant_response_${new Date().getTime()}`,
+                  role: 'assistant' as const,
+                  parts: [{type: 'text', text: response}],
+                  attachments: [],
+                  createdAt: new Date().toISOString(),
+                  chatId: chatId,
+                };
+                responseElement.innerHTML = generateResponseMessageWithoutOuterDiv({
+                  content: response,
+                  id: message.id,
+                  timestamp: new Date().getTime(),
+                });
+                if (chatContent) {
+                  chatContent.scrollTop = chatContent.scrollHeight;
+                }
+                attachEventListenersToTranslateSelector([message]);
+
+                fetch(`${CLARITY_API_URL}/chat/message/${chatId}`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({content: response, role: 'assistant', chatId: chatId}),
+                })
+                  .then((response) => response.json())
+                  .then((result: {message: Message}) => {
+                    chat.messages.push(result.message);
+                    addNewChatToHistory(chat);
+                  });
+              });
+            });
+          }
         })
         .catch((error) => {
-          console.error('Browser summarize error:', error);
+          console.log('Browser summarize error:', error);
         });
     };
 
-    if (userId === null) {
-      browserSummarize(internalLink, responseMessage);
-      return;
-    }
-
-    serverSummarize({
-      url: internalLink,
-      messageElement: responseMessage,
-      contentCategory: category,
-      userMessage: userMessage.innerText,
+    chrome.storage.sync.get('llmProvider').then(({llmProvider}) => {
+      if (llmProvider === 'server') {
+        serverSummarize({
+          url: internalLink,
+          messageElement: responseMessage,
+          contentCategory: category,
+          userMessage: userMessage.innerText,
+        });
+      } else {
+        browserSummarize({
+          link: internalLink,
+          responseElement: responseMessage,
+          category,
+          userMessage: userMessage.innerText,
+        });
+      }
     });
   });
 };

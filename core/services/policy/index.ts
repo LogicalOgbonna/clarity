@@ -6,9 +6,10 @@ import {TagService} from '@/services/tag';
 import {chromium} from 'playwright';
 import {JSDOM} from 'jsdom';
 import {Readability} from '@mozilla/readability';
-import {azureProvider} from '@/utils/model';
+import {openai} from '@ai-sdk/openai';
 import {generateObject} from 'ai';
 import {object, string, array} from 'zod';
+import { LLM_MODEL } from '@/utils/model';
 
 export class PolicyService {
   /**
@@ -33,9 +34,9 @@ export class PolicyService {
       // if it does, compare the createdAt date with the current parsed policy date,
       // if the current policy is older than 1 week, fetch a new one and compare their dates (comparing the hashes of their dates)
 
-      const {link, domain, type, timeoutMs, waitFor} = PolicyDto.createPolicyRequestDto.parse(data);
+      const {link, type, timeoutMs, waitFor} = PolicyDto.createPolicyRequestDto.parse(data);
       const timeoutMsNumber = Math.min(Number(timeoutMs) || 10000, 30000);
-      const {hostname} = new URL(domain);
+      const {hostname} = new URL(link);
 
       const browser = await chromium.launch({
         args: ['--no-sandbox'],
@@ -68,13 +69,13 @@ export class PolicyService {
       const {
         object: {datePublished, company, tags},
       } = await generateObject({
-        model: azureProvider.chat('gpt-4.1'),
+        model: openai.chat(LLM_MODEL),
         prompt: text,
         schema: object({
           datePublished: string().describe('The date the article was published in yyyy-mm-dd format'),
           company: string().describe('The name of the company that owns this policy'),
           tags: array(string())
-            .max(4)
+            .max(2)
             .describe(
               'A list of business categories or services this company provides (maximum 4 tags, e.g., "social media", "e-commerce", "cloud computing", "fintech")'
             ),
@@ -82,7 +83,7 @@ export class PolicyService {
         system: `
                 You are a helpful assistant that extracts information from policy documents. 
                 Extract the publication date, company name, and business categories/services. 
-                Return the date in yyyy-mm-dd format, the company name as a string, and tags as an array of strings (maximum 4 tags) that best describe the company's primary business type or industry. Think carefully and select only the most relevant and specific tags that truly represent what the company does.`,
+                Return the date in yyyy-mm-dd format, the company name as a string, and tags as an array of strings (maximum 2 tags) that best describe the company's primary business type or industry. Think carefully and select only the most relevant and specific tags that truly represent what the company does.`,
       });
 
       if (!datePublished) {
@@ -97,7 +98,7 @@ export class PolicyService {
       const tagIds = await TagService.createOrGetTagIds(tags || []);
 
       return await PolicyRepository.create({
-        domain: hostname,
+        hostname,
         link,
         type,
         version,
@@ -107,6 +108,7 @@ export class PolicyService {
         tagIds: tagIds,
       });
     } catch (error) {
+      console.log("🚀 ~ PolicyService ~ create ~ error:", error)
       throw error;
     }
   }
@@ -130,7 +132,7 @@ export class PolicyService {
       where: {id},
       select: {
         id: true,
-        domain: true,
+        hostname: true,
         link: true,
         type: true,
         version: true,
@@ -179,7 +181,7 @@ export class PolicyService {
 
   public static defaultSelect: Prisma.policySelect = {
     id: true,
-    domain: true,
+    hostname: true,
     link: true,
     type: true,
     version: true,

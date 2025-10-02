@@ -34,12 +34,14 @@ class ChatRepository extends ChatDto {
     }
   }
 
-  static async findByID(data: InferType<typeof ChatDto.idDto>): Promise<Omit<Chat, 'userId'>> {
+  static async findByID(data: {
+    where: Prisma.chatWhereUniqueInput;
+    select?: Prisma.chatSelect;
+  }): Promise<Omit<Chat, 'userId'>> {
     try {
-      const {id} = ChatDto.idDto.parse(data);
-      return db.chat.findUniqueOrThrow({
-        where: {id},
-        select: {
+      const {
+        where,
+        select = {
           id: true,
           title: true,
           visibility: true,
@@ -55,6 +57,10 @@ class ChatRepository extends ChatDto {
             orderBy: {createdAt: 'asc'},
           },
         },
+      } = data;
+      return db.chat.findUniqueOrThrow({
+        where,
+        select,
       });
     } catch (error) {
       throw error;
