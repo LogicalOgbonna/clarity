@@ -2,8 +2,8 @@ import * as React from 'react';
 
 export const Accounts = (): React.ReactElement => {
   const [user] = React.useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'N/A',
+    email: 'N/A',
     avatar: '👤',
   });
 
@@ -13,9 +13,7 @@ export const Accounts = (): React.ReactElement => {
       name: 'Google',
       connected: true,
       email: 'john.doe@gmail.com',
-    },
-    {id: 'github', name: 'GitHub', connected: false, email: null},
-    {id: 'microsoft', name: 'Microsoft', connected: false, email: null},
+    }
   ]);
 
   const handleAccountToggle = (accountId: string): void => {
@@ -46,7 +44,7 @@ export const Accounts = (): React.ReactElement => {
         </div>
       </div>
 
-      <div className="settings-section">
+      {/* <div className="settings-section">
         <h3>Account Security</h3>
         <div className="setting-item">
           <div className="security-item">
@@ -70,7 +68,7 @@ export const Accounts = (): React.ReactElement => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="settings-section">
         <h3>Connected Accounts</h3>
