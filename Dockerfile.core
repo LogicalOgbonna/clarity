@@ -12,7 +12,6 @@ FROM base AS builder
 
 COPY . .
 RUN npm run prisma:generate
-RUN npx prisma migrate deploy
 RUN npm run build:core
 
 FROM node:22-alpine3.20 AS runner
@@ -23,6 +22,7 @@ WORKDIR /app
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/core ./core
 COPY --from=builder --chown=nextjs:nodejs /app/dist/core ./dist/core
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY package.json package-lock.json ./
 
 ENV NODE_ENV=production
