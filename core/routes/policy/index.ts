@@ -48,7 +48,7 @@ router.post('/fetch-or-create', async (req, res) => {
     const {hostname} = new URL(domain);
     // First, try to find existing policy
     try {
-    const existingPolicies = await PolicyService.findByID({hostname, type, version: link});
+    const existingPolicies = await PolicyService.findByID({hostname, type,  link});
     return res.json({
       policy: existingPolicies,
       status: 'success',
@@ -73,7 +73,7 @@ router.post('/fetch-or-create', async (req, res) => {
 
     // If not found, create new policy
   } catch (error) {
-    console.error('Error in fetch-or-create:', error);
+    // console.error('Error in fetch-or-create:', error);
     res.status(500).json({
       error: JSON.stringify(error),
       status: 'error',

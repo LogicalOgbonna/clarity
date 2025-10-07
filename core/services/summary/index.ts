@@ -1,7 +1,7 @@
 import {PolicyService} from '@/services/policy';
 import {ChatService} from '@/services/chat';
 import {MessageService} from '@/services/message';
-import {LLM_MODEL, SYSTEM_PROMPT} from '@/utils/model';
+import {LLM_MODEL, PROMPTS, PromptType} from '@/utils/model';
 import {openai} from '@ai-sdk/openai';
 import {convertToModelMessages, generateObject, generateText, UIMessagePart} from 'ai';
 import {SummaryDto} from '@/db/dto/summary';
@@ -27,7 +27,7 @@ export class SummaryService extends SummaryDto {
     message,
   }: {
     link: string;
-    type: 'privacy' | 'terms';
+    type: PromptType;
     userId: string;
     chatId: string;
     message: string;
@@ -115,7 +115,7 @@ export class SummaryService extends SummaryDto {
             },
           }))
         ),
-        system: SYSTEM_PROMPT,
+        system: PROMPTS[type],
       });
 
       // Create assistant message with summary
@@ -190,7 +190,7 @@ export class SummaryService extends SummaryDto {
       const {text: summary} = await generateText({
         model: openai.chat(LLM_MODEL),
         prompt: policy.content,
-        system: SYSTEM_PROMPT,
+        system: PROMPTS[policy.type as PromptType],
       });
 
       // Create assistant message with summary

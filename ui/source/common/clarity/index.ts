@@ -304,7 +304,6 @@ const clarity = (category: string, externalLink?: string): void => {
              transition: background-color 0.2s;
              display: flex;
              flex-direction: column;
-             gap: 4px;
              position: relative;
            " onmouseover="
               const tooltip = this.querySelector('.tooltiptext'); 
@@ -728,7 +727,6 @@ const clarity = (category: string, externalLink?: string): void => {
       <div style="
         display: flex;
         flex-direction: column;
-        gap: 4px;
       ">
         <div style="
             background-color: #FF4A4A; 
@@ -739,6 +737,7 @@ const clarity = (category: string, externalLink?: string): void => {
             align-self: flex-end;
             font-size: 14px;
             line-height: 24px;
+            font-size: 0.9em !important;
           ">
             ${content}
         </div>
@@ -771,15 +770,22 @@ const clarity = (category: string, externalLink?: string): void => {
           .clarity-content ul {
             margin: 8px 0;
             padding-left: 20px;
+            font-size: 0.9em !important;
+            list-style: disc !important;
           }
           .clarity-content li {
             margin: 4px 0;
           }
           .clarity-content p {
             margin: 8px 0;
+            font-size: 0.9em !important;
           }
           .clarity-content b {
             font-weight: 600;
+          }
+          .clarity-content h1,
+          .clarity-content h2 {
+            font-size: 1em !important;
           }
         </style>
         <div class="clarity-content" id="${id}">
@@ -841,15 +847,22 @@ const clarity = (category: string, externalLink?: string): void => {
               .clarity-content ul {
                 margin: 8px 0;
                 padding-left: 20px;
+                font-size: 0.9em !important;
+                list-style: disc !important;
               }
               .clarity-content li {
                 margin: 4px 0;
               }
               .clarity-content p {
                 margin: 8px 0;
+                font-size: 0.9em !important;
               }
               .clarity-content b {
                 font-weight: 600;
+              }
+              .clarity-content h1,
+              .clarity-content h2 {
+                font-size: 1em !important;
               }
             </style>
             <div class="clarity-content" id="${id}">
@@ -967,15 +980,22 @@ const clarity = (category: string, externalLink?: string): void => {
               .clarity-content ul {
                 margin: 8px 0;
                 padding-left: 20px;
+                font-size: 0.9em !important;
+                list-style: disc !important;
               }
               .clarity-content li {
                 margin: 4px 0;
               }
               .clarity-content p {
                 margin: 8px 0;
+                font-size: 0.9em !important;
               }
               .clarity-content b {
                 font-weight: 600;
+              }
+              .clarity-content h1,
+              .clarity-content h2 {
+                font-size: 1em !important;
               }
             </style>
             <div class="clarity-content" id="${result.chat.id}">
@@ -1157,6 +1177,7 @@ const clarity = (category: string, externalLink?: string): void => {
         position: relative;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         text-align: left;
+        font-size: 0.9em !important;
       `;
 
       responseMessage.appendChild(generateLoadingIndicator());
@@ -1224,8 +1245,8 @@ const clarity = (category: string, externalLink?: string): void => {
               bottom: 20px;
               right: 20px;
               cursor: auto !important;
-              width: 375px;
-              height: 600px;
+              width: 375px !important;
+              height: 600px !important;
               background-color: white;
               border-radius: 16px;
               box-shadow: 0 8px 16px rgba(0,0,0,0.1);
@@ -1488,8 +1509,9 @@ const clarity = (category: string, externalLink?: string): void => {
     }
 
     const userMessage = document.createElement('div');
+    const userInput = `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`;
     userMessage.innerHTML = generateUserMessage(
-      `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`,
+      userInput,
       new Date().getTime()
     );
     userMessage.id = 'initial-user-message';
@@ -1510,6 +1532,7 @@ const clarity = (category: string, externalLink?: string): void => {
       position: relative;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       text-align: left;
+      font-size: 0.9em !important;
     `;
     responseMessage.appendChild(generateLoadingIndicator());
     chatContent.appendChild(responseMessage);

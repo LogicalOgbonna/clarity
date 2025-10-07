@@ -15,7 +15,7 @@ export class PolicyDto {
   public static idDto = object({
     hostname: string().min(1),
     type: string().min(1),
-    version: string().min(1),
+    link: string().min(1),
   });
 
   public static createPolicyRequestDto = object({

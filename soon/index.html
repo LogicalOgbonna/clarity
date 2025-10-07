@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clarity — Coming Soon</title>
+  <style>
+    :root {
+      --clarity-crimson: #ff4a4a;
+      --clarity-rose: #ff6b6b;
+      --clarity-gradient: linear-gradient(135deg, rgba(255, 74, 74, 0.92), rgba(255, 107, 107, 0.82));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--clarity-crimson);
+      color: #ffffff;
+    }
+
+    .hero {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--clarity-gradient);
+      text-align: center;
+      padding: 0 1.5rem;
+    }
+
+    .hero__eyebrow {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.45em;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero__headline {
+      font-size: clamp(2.5rem, 6vw, 3.75rem);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      margin: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <span class="hero__eyebrow">Clarity</span>
+    <p class="hero__headline">comming soon</p>
+  </section>
+</body>
+</html>

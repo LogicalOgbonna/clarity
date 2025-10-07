@@ -48,7 +48,7 @@ model policy {
 
   tags      policyTag[]
 
-  @@unique([hostname, type, version])
+  @@unique([hostname, type, link])
 }
 
 model policyTag {

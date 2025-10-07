@@ -1,0 +1,22 @@
+services:
+  clarity-core:
+    image: clarity-core:0.0.1
+    container_name: clarity-core
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/core/db/clarity.sqlite"
+    volumes:
+      - ./core/db:/app/core/db
+  clarity-web:
+    image: clarity-web:0.0.1
+    container_name: clarity-web
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./web:/app/web
+    depends_on:
+      - clarity-core
+
