@@ -29,7 +29,7 @@ type Chat = {
 };
 
 const clarity = (category: string, externalLink?: string): void => {
-  const CLARITY_API_URL = 'https://admin.blucarbone.co/api/clarity/api';
+  const CLARITY_API_URL = 'https://admin.blucarbone.co/api/clarity';
 
   const languages: Array<{
     code: string;

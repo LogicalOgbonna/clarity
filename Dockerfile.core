@@ -6,8 +6,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-RUN npm exec playwright install
-
 FROM base AS builder
 
 COPY . .
@@ -23,6 +21,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/core ./core
 COPY --from=builder --chown=nextjs:nodejs /app/dist/core ./dist/core
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
+RUN npm exec playwright install
 COPY package.json package-lock.json ./
 
 ENV NODE_ENV=production
