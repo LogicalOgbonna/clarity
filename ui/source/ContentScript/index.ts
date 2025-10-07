@@ -1,8 +1,7 @@
 import {browser} from 'webextension-polyfill-ts';
 import Scrapper from '../common/scrapper';
 import {Policy} from '../common/types/index.d';
-
-const API_URL = 'http://localhost:3000/api';
+import {CLARITY_API_URL} from '../common/constants';
 
 // Chat history caching utilities
 const getUserId = async (): Promise<string | null> => {
@@ -47,7 +46,7 @@ const initializeChatHistory = async (): Promise<void> => {
   try {
     console.log('No valid cache found, fetching chat history from API...');
     const response = await fetch(
-      `${API_URL}/chat/history/${userId}?page=1&limit=50`
+      `${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`
     );
 
     if (response.ok) {
@@ -169,7 +168,7 @@ const getOrFetchPolicy = async ({
 
   // If not in cache, fetch from server
   try {
-    const response = await fetch(`${API_URL}/policy/fetch-or-create`, {
+    const response = await fetch(`${CLARITY_API_URL}/policy/fetch-or-create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

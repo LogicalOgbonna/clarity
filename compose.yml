@@ -1,6 +1,6 @@
 services:
   clarity-core:
-    image: ghcr.io/logicalogbonna/clarity-core:1
+    image: ghcr.io/logicalogbonna/clarity-core:2
     container_name: clarity-core
     ports:
       - "3000:3000"
@@ -8,8 +8,10 @@ services:
       DATABASE_URL: "file:/app/core/db/clarity.sqlite"
     volumes:
       - ./core/db:/app/core/db
+    networks:
+      - bluca-scan-net
   clarity-web:
-    image: ghcr.io/logicalogbonna/clarity-web:1
+    image: ghcr.io/logicalogbonna/clarity-web:2
     container_name: clarity-web
     ports:
       - "3001:3000"
@@ -19,4 +21,15 @@ services:
       - ./web:/app/web
     depends_on:
       - clarity-core
+    networks:
+      - bluca-scan-net
+networks:
+  bluca-scan-net:
+#    external: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.91.0/24
+          gateway: 192.168.91.1
 

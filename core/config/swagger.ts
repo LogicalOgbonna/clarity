@@ -20,7 +20,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://api.flairbusiness.com',
+        url: 'https://admin.blucarbone.co/api/clarity',
         description: 'Production server',
       },
     ],

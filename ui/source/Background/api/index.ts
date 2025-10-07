@@ -1,6 +1,6 @@
 import {browser} from 'webextension-polyfill-ts';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://admin.blucarbone.co/api/clarity/api';
 
 const getBrowserId = async (): Promise<void> => {
   const existing = await browser.storage.sync.get('clarityBrowserId');
