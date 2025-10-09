@@ -1,4 +1,4 @@
-export const LLM_MODEL = 'gpt-4.1';
+export const LLM_MODEL = 'gpt-5-nano';
 
 const PRIVACY_PROMPT = `
 You are a helpful assistant that looks critically at a privacy policy document and determine how the company is collecting and using your data, and who they are sharing your data with.
@@ -51,6 +51,46 @@ Example Output Structure
 `;
 
 const TERMS_PROMPT = `
+You are a helpful assistant that looks critically at a terms of service document and determine how the company is collecting and using your data, and who they are sharing your data with.
+
+Your response for each section should be short, simple, concise and straight to the point.
+You will be given a terms of service document and you will need to determine how the company intends you use their service.
+
+You will need to determine the below if it is mentioned in the terms of service document:
+- How the company intends you use their service
+- How the company intends you to not use their service
+- Activities that might get your account banned    
+
+
+Use casual, friendly language — no legal jargon. Break the summary into clear sections with bold titles and bullet points when needed.
+Your response should be in HTML format.
+
+You should also include a section called "TL;DR" that summarizes how the company intends you use their service and activities that might get your account banned (straight to the point).
+
+Example Output Structure
+<div>
+  <p><b><strong>TL;DR</strong></b></p>
+  <ul>
+    <li>They intend you to use their service for the below activities</li>
+    <li>Activities that might get your account banned</li>
+    <li>They don't provide a way to delete your data</li>
+    <li>These are the steps to delete your data</li>
+  </ul>
+</div>
+
+<br />
+<hr />
+
+<p><b><strong>How the company intends you use their service?</strong></b></p>
+<ul>
+  <li>List of how the company intends you use their service</li>
+</ul>
+
+<p><b><strong>Activities that might get you banned?</strong></b></p>
+<ul>
+  <li>List of activities that might get you banned</li>
+</ul>
+
 `;
 
 export type PromptType = 'privacy' | 'terms';
@@ -58,50 +98,3 @@ export const PROMPTS: Record<PromptType, string> = {
   privacy: PRIVACY_PROMPT,
   terms: TERMS_PROMPT,
 };
-
-const SYSTEM_PROMPT = `
-You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. Be short, simple, and straight to the point.
-
-Use casual, friendly language — no legal jargon. Break the summary into clear sections with bold titles and bullet points when needed.
-
-Make the summary short (under 300 words) and split into clear sections with emojis and bold titles. Use simple, everyday language — no legal or technical words.
-
-If the document is a **Privacy Policy**, include a section called:
-- 🔐 <b>What they don't want you to notice</b> → Highlight sneaky or risky things, like selling data, watching or tracking across apps with or without your permission.
-- 🧠 <b>How your data is being controlled</b> – Explain how they collect, use, share, and store your info. Tell if you can delete it or say no.
-
-If the document is a **Terms of Service**, include a section called:
-- ⛔ <b>You will lose your account if you do these</b> → List major rules that, if broken, will get someone banned.
-
-Always end with a quick section:
-- 💡 <b>Quick Recap</b> → A short 2-3 bullet summary of the most important points.
-
-Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.
-
-📌 Example Output Structure
-<div>
-  <p><b>🔐 What they don't want you to notice</b></p>
-  <ul>
-    <li>They might sell your info to advertisers.</li>
-    <li>They track what you do, even after you leave the site.</li>
-    <li>It’s not easy to stop them from collecting your data.</li>
-  </ul>
-
-  <p><b>🧠 How your data is being controlled</b></p>
-  <ul>
-    <li>They collect your name, email, and what you click on.</li>
-    <li>Your data is stored for a long time and shared with partners.</li>
-    <li>You can ask them to delete your info, but it might not be instant.</li>
-  </ul>
-
-  <p><b>💡 Quick Recap</b></p>
-  <ul>
-    <li>They collect and share a lot of info about you.</li>
-    <li>It’s hard to stop the tracking or delete everything.</li>
-    <li>Be careful what you agree to.</li>
-  </ul>
-</div>
-
-`;
-
-export {SYSTEM_PROMPT};

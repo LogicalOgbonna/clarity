@@ -4,7 +4,7 @@ import {type chat as Chat, type message as Message, type policy as Policy} from 
 import {type Prisma} from '@prisma/client';
 import {MessageService} from '../message';
 import {convertToModelMessages, generateText, UIMessagePart} from 'ai';
-import {LLM_MODEL, PROMPTS, PromptType, SYSTEM_PROMPT} from '@/utils/model';
+import {LLM_MODEL, PROMPTS, PromptType} from '@/utils/model';
 import {formatISO} from 'date-fns';
 import {CustomUIDataTypes} from '@/db/dto/message';
 import {PolicyService} from '../policy';

@@ -1671,14 +1671,14 @@ const clarity = (category: string, externalLink?: string): void => {
           url: internalLink,
           messageElement: responseMessage,
           contentCategory: category,
-          userMessage: userMessage.innerText,
+          userMessage: `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`,
         });
       } else {
         browserSummarize({
           link: internalLink,
           responseElement: responseMessage,
           category,
-          userMessage: userMessage.innerText,
+          userMessage: `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`,
         });
       }
     });

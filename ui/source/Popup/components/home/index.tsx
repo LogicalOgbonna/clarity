@@ -7,13 +7,13 @@ export const Home = (): React.ReactElement => {
       <div className="welcome-section">
         <span className="icon">💬</span>
         <div className="title">Welcome to Clarity</div>
-        <div className="subtitle">Your AI-powered terms analyzer</div>
+        <div className="subtitle">Making the internet transparent, one privacy policy at a time</div>
       </div>
 
       <ul className="feature-list">
         <li>
           <div className="feature-icon">📄</div>
-          <div className="feature-text">Analyze Terms of Service</div>
+          <div className="feature-text">Analyze ToS and Privacy Policy</div>
         </li>
         <li>
           <div className="feature-icon">🔍</div>

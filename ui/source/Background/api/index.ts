@@ -1,6 +1,5 @@
 import {browser} from 'webextension-polyfill-ts';
-
-const API_URL = 'https://admin.blucarbone.co/api/clarity';
+import {CLARITY_API_URL} from '../../common/constants';
 
 const getBrowserId = async (): Promise<void> => {
   const existing = await browser.storage.sync.get('clarityBrowserId');
@@ -9,7 +8,7 @@ const getBrowserId = async (): Promise<void> => {
   }
   const clarityBrowserId = crypto.randomUUID();
   try {
-    const response = await fetch(`${API_URL}/user/browser`, {
+    const response = await fetch(`${CLARITY_API_URL}/user/browser`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

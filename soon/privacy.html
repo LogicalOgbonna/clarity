@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clarity Privacy Notice</title>
+    <style>
+      :root {
+        --clarity-crimson: #ff4a4a;
+        --clarity-rose: #ff6b6b;
+        --clarity-deep: #1c1c1c;
+        --clarity-soft: #f7f7f7;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--clarity-gradient, var(--clarity-crimson));
+        color: var(--clarity-deep);
+        font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        padding: 2.5rem 1.5rem;
+      }
+
+      .card {
+        max-width: 840px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 20px;
+        padding: clamp(2rem, 4vw, 3rem);
+        box-shadow: 0 30px 60px rgba(28, 28, 28, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        backdrop-filter: blur(20px);
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: rgba(28, 28, 28, 0.55);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--clarity-deep);
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.65;
+        font-size: 1rem;
+        color: rgba(28, 28, 28, 0.78);
+      }
+
+      .highlight {
+        border-left: 4px solid var(--clarity-crimson);
+        padding-left: 1.25rem;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .pill-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 74, 74, 0.12);
+        color: var(--clarity-crimson);
+        border-radius: 999px;
+        padding: 0.55rem 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .pill svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(1.35rem, 3vw, 1.65rem);
+        font-weight: 600;
+        color: var(--clarity-deep);
+      }
+
+      ul {
+        margin: 1rem 0 0;
+        padding-left: 1.25rem;
+        display: grid;
+        gap: 0.65rem;
+        color: rgba(28, 28, 28, 0.78);
+      }
+
+      strong {
+        color: var(--clarity-deep);
+        font-weight: 600;
+      }
+
+      footer {
+        border-top: 1px solid rgba(28, 28, 28, 0.08);
+        padding-top: 1.75rem;
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      @media (max-width: 640px) {
+        .card {
+          border-radius: 16px;
+          padding: 2rem;
+        }
+
+        .pill-group {
+          gap: 0.5rem;
+        }
+
+        .pill {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <header>
+        <span class="eyebrow">Clarity Privacy</span>
+        <h1>Your privacy is our default setting</h1>
+        <p>
+          Clarity collects just the basics needed to personalize your experience and provide premium features. We do
+          not track, profile, or monetize your data.
+        </p>
+      </header>
+
+      <section class="highlight">
+        <p>We only ask for information you choose to share with us:</p>
+        <div class="pill-group">
+          <span class="pill">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12c2.761 0 5-2.462 5-5.5S14.761 1 12 1 7 3.462 7 6.5 9.239 12 12 12Z" stroke="currentColor" stroke-width="1.5" />
+              <path d="M3.5 21.5c.89-3.432 4.43-5.5 8.5-5.5s7.61 2.068 8.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            Name
+          </span>
+          <span class="pill">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.5" />
+              <path d="m4 7 6.74 4.16a3 3 0 0 0 2.52 0L20 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            Email
+          </span>
+          <span class="pill">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5" />
+              <path d="M2 10h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            Credit card (premium only)
+          </span>
+        </div>
+      </section>
+
+      <section>
+        <h2>How we use your info</h2>
+        <ul>
+          <li><strong>Name</strong> lets us personalize your dashboard and communications.</li>
+          <li><strong>Email</strong> helps us create your account, send updates you opt into, and assist with support.</li>
+          <li><strong>Credit card details</strong> are processed securely for premium billing and never stored directly by us.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>What we never do</h2>
+        <ul>
+          <li>No cookies or trackers. We don’t store, read, or process browser cookies.</li>
+          <li>No third-party advertising. Your data is never sold, rented, or shared without your explicit consent.</li>
+          <li>No surprise collection. If we don’t ask for it here, we don’t collect it anywhere else.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Your choices, protected</h2>
+        <ul>
+          <li>You can access, update, or delete your personal details at any time inside Clarity.</li>
+          <li>Premium billing runs through trusted payment partners that meet top security standards.</li>
+          <li>We review our privacy posture regularly and update this notice whenever things change.</li>
+        </ul>
+      </section>
+
+      <footer>
+        <strong>Need help or have a privacy question?</strong>
+        <p>Email our privacy team at <a href="mailto:privacy@clarity.click">privacy@clarity.click</a> and we’ll respond promptly.</p>
+      </footer>
+    </main>
+  </body>
+</html>
+
