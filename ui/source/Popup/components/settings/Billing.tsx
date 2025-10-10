@@ -1,8 +1,32 @@
 import * as React from 'react';
+import {User} from '../../api';
+import {SettingsTabType} from '.';
 
-export const Billing = (): React.ReactElement => {
+interface BillingProps {
+  user: User | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  switchTab: (tab: SettingsTabType) => void;
+}
+
+export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => {
   //   const [plan, setPlan] = React.useState('free');
   //   const [billingCycle, setBillingCycle] = React.useState('monthly');
+
+  const onUpgrade = (plan: 'pro' | 'team'): void => {
+    if (!user || !user.email || !user.name) {
+      switchTab('accounts');
+      return;
+    }
+
+    switchTab('billing');
+    switch (plan) {
+      case 'pro':
+        break;
+      case 'team':
+        break;
+    }
+  };
 
   return (
     <div className="settings-content">
@@ -51,7 +75,7 @@ export const Billing = (): React.ReactElement => {
               <li>✓ Export capabilities</li>
               <li>✓ Priority support</li>
             </ul>
-            <button className="upgrade-button" type="button">
+            <button className="upgrade-button" type="button" onClick={() => onUpgrade('pro')}>
               Upgrade to Pro
             </button>
           </div>
@@ -71,7 +95,7 @@ export const Billing = (): React.ReactElement => {
               <li>✓ Advanced analytics</li>
               <li>✓ Dedicated support</li>
             </ul>
-            <button className="upgrade-button primary" type="button">
+            <button className="upgrade-button primary" type="button" onClick={() => onUpgrade('team')}>
               Upgrade to Team
             </button>
           </div>

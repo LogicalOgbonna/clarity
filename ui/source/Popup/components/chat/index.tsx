@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {browser} from 'webextension-polyfill-ts';
-import {CHAT_HISTORY_LIMIT, CLARITY_API_URL} from '../../../common/constants';
+import {CHAT_HISTORY_LIMIT, CLARITY_API_URL, CLARITY_USER_ID_KEY} from '../../../common/constants';
 import {LoadingSpinner} from '../shared';
 import {ChatList} from './components/ChatList';
 import {ChatData, ChatInLocalStorage} from './types.d';
@@ -11,7 +11,7 @@ import {Chat} from './components/Chat';
 type Action = 'history' | 'chat';
 
 const getUserID = async (): Promise<string | null> => {
-  const {clarityUserId} = await browser.storage.sync.get('clarityUserId');
+  const {clarityUserId} = await browser.storage.sync.get(CLARITY_USER_ID_KEY);
   return clarityUserId || null;
 };
 

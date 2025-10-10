@@ -1,8 +1,8 @@
 import {browser} from 'webextension-polyfill-ts';
-import {CLARITY_API_URL} from '../../common/constants';
+import {CLARITY_API_URL, CLARITY_BROWSER_ID_KEY} from '../../common/constants';
 
 const getBrowserId = async (): Promise<void> => {
-  const existing = await browser.storage.sync.get('clarityBrowserId');
+  const existing = await browser.storage.sync.get(CLARITY_BROWSER_ID_KEY);
   if (existing.clarityBrowserId) {
     return;
   }

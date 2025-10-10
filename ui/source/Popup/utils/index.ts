@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {browser} from 'webextension-polyfill-ts';
+import { CLARITY_BROWSER_ID_KEY } from '../../common/constants';
 
 export const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
@@ -29,10 +30,7 @@ export const saveSetting = async <T>(key: string, value: T): Promise<void> => {
   }
 };
 
-export const getSetting = async <T>(
-  key: string,
-  defaultValue: T
-): Promise<T> => {
+export const getSetting = async <T>(key: string, defaultValue: T): Promise<T> => {
   try {
     const result = await browser.storage.sync.get(key);
     return result[key] !== undefined ? result[key] : defaultValue;
@@ -42,9 +40,7 @@ export const getSetting = async <T>(
   }
 };
 
-export const saveMultipleSettings = async (
-  settings: Record<string, any>
-): Promise<void> => {
+export const saveMultipleSettings = async (settings: Record<string, any>): Promise<void> => {
   try {
     await browser.storage.sync.set(settings);
   } catch (error) {
@@ -69,6 +65,11 @@ export const removeSetting = async (key: string): Promise<void> => {
     console.error(`Failed to remove setting ${key}:`, error);
     throw error;
   }
+};
+
+export const getBrowserId = async (): Promise<string> => {
+  const {clarityBrowserId} = await browser.storage.sync.get(CLARITY_BROWSER_ID_KEY);
+  return clarityBrowserId || '';
 };
 
 // Specific settings keys
