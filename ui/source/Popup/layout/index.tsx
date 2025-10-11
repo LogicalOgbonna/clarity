@@ -22,7 +22,7 @@ export default function Layout({
 
   return (
     <section id="popup">
-      <Header policyCount={policyCount} />
+      <Header policyCount={policyCount} tab={activeTab} />
       <div className="content">
         {children({
           tab: activeTab,

@@ -1,9 +1,11 @@
 import * as React from 'react';
 import {PolicyCount} from '../../api';
+import {TabType} from '..';
 
-export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactElement => {
+export const Header = ({policyCount, tab}: {policyCount?: PolicyCount, tab: TabType}): React.ReactElement => {
   const privacyCount = policyCount?.privacy ?? 0;
   const termsCount = policyCount?.terms ?? 0;
+  const isHomeTab = tab === 'home';
 
   return (
     <div className="header">
@@ -11,7 +13,7 @@ export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactE
         <div className="logo">C</div>
         <h2>Clarity</h2>
       </div>
-      {(privacyCount || termsCount) ?  (
+      {(privacyCount || termsCount) && isHomeTab ?  (
         <div className="policy-count" aria-live="polite">
           {privacyCount && (
             <div className="count-item">
@@ -19,7 +21,6 @@ export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactE
                 🔐
               </span>
               <div className="count-details">
-                <span className="count-label">Policies</span>
                 <span className="count-value">{privacyCount}</span>
               </div>
             </div>
@@ -31,7 +32,6 @@ export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactE
                 📜
               </span>
               <div className="count-details">
-                <span className="count-label">Terms</span>
                 <span className="count-value">{termsCount}</span>
               </div>
             </div>
