@@ -959,19 +959,26 @@ const clarity = (category: string, externalLink?: string): void => {
     ): void => {
       if (!question.trim()) return;
 
-      fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({message: question}),
-      })
-        .then((response) => response.json())
-        .then((result: {chat: Message}) => {
-          const aiResponse = result.chat.parts.map((part) => part.text).join('');
+      sendRequestWithToken((token) => {
+        fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+          body: JSON.stringify({message: question}),
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error(response.statusText);
+          })
+          .then((result: {chat: Message}) => {
+            const aiResponse = result.chat.parts.map((part) => part.text).join('');
 
-          if (aiResponse) {
-            responseMessage.innerHTML = `<div style="
+            if (aiResponse) {
+              responseMessage.innerHTML = `<div style="
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: #333;
@@ -1018,43 +1025,44 @@ const clarity = (category: string, externalLink?: string): void => {
               ${languageSelector(result.chat.id)}
             </div>
           </div>`;
-            const userMessage: Message = {
-              chatId,
-              id: result.chat.id,
-              role: 'user',
-              parts: [{type: 'text', text: question}],
-              attachments: [],
-              createdAt: new Date().toISOString(),
-            };
+              const userMessage: Message = {
+                chatId,
+                id: result.chat.id,
+                role: 'user',
+                parts: [{type: 'text', text: question}],
+                attachments: [],
+                createdAt: new Date().toISOString(),
+              };
 
-            // Add event listener for this specific message's translate button
-            attachEventListenersToTranslateSelector([userMessage, result.chat]);
+              // Add event listener for this specific message's translate button
+              attachEventListenersToTranslateSelector([userMessage, result.chat]);
 
-            addMessageToChat(userMessage);
-            addMessageToChat(result.chat);
-          } else {
+              addMessageToChat(userMessage);
+              addMessageToChat(result.chat);
+            } else {
+              responseMessage.innerHTML = generateResponseMessage({
+                content: "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
+                id: 'error_generate_response',
+                timestamp: new Date().getTime(),
+                translate: false,
+              });
+            }
+          })
+          .catch((error) => {
+            console.log('🚀 ~ handleChatWithServerLLM ~ error:', error);
             responseMessage.innerHTML = generateResponseMessage({
-              content: "<p style='color: red;'>I'm sorry, I couldn't generate a response for that.</p>",
+              content: "<p style='color: red;'>An error occurred. Please try again.</p>",
               id: 'error_generate_response',
               timestamp: new Date().getTime(),
               translate: false,
             });
-          }
-        })
-        .catch((error) => {
-          console.log('🚀 ~ handleChat ~ error:', error);
-          responseMessage.innerHTML = generateResponseMessage({
-            content: "<p style='color: red;'>An error occurred. Please try again.</p>",
-            id: 'error_generate_response',
-            timestamp: new Date().getTime(),
-            translate: false,
+          })
+          .finally(() => {
+            if (chatContent) {
+              chatContent.scrollTop = chatContent.scrollHeight;
+            }
           });
-        })
-        .finally(() => {
-          if (chatContent) {
-            chatContent.scrollTop = chatContent.scrollHeight;
-          }
-        });
+      });
     };
 
     let promptSession: any;
@@ -1345,6 +1353,12 @@ const clarity = (category: string, externalLink?: string): void => {
       }
     };
 
+    const sendRequestWithToken = (cb: (data: string) => void) => {
+      chrome.storage.sync.get('clarityToken').then(({clarityToken}) => {
+        cb(`Bearer ${clarityToken}`);
+      });
+    };
+
     const serverSummarize = ({
       url,
       messageElement,
@@ -1356,72 +1370,82 @@ const clarity = (category: string, externalLink?: string): void => {
       contentCategory: string;
       userMessage: string;
     }): void => {
-      fetch(`${CLARITY_API_URL}/summary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          link: url,
-          type: contentCategory,
-          userId,
-          chatId,
-          message: userMessage,
-        }),
-      })
-        .then((response) => response.json())
-        .then((result: {chat: Chat}) => {
-          if (result.chat) {
-            // This use case rarely occurs
-            if (checkForChatInHistoryByChatId(result.chat.id)) {
-              // Replace existing chat in history
-              replaceMessageInChatToHistory(result.chat);
-            } else {
-              // Add new chat to history
-              // We are saving the entire chat to the history since we didn't save when the chat was created
-              const chats = addNewChatToHistory(result.chat);
-              const history = renderHistoryList(chats);
-              const historyList = document.getElementById('history-list');
-              if (historyList) {
-                historyList.innerHTML = history;
-                attachHistoryEventListeners();
+      sendRequestWithToken((token) => {
+        fetch(`${CLARITY_API_URL}/summary`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            link: url,
+            type: contentCategory,
+            userId,
+            chatId,
+            message: userMessage,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error(response.statusText);
+          })
+          .then((result: {chat: Chat}) => {
+            if (result.chat) {
+              // This use case rarely occurs
+              if (checkForChatInHistoryByChatId(result.chat.id)) {
+                // Replace existing chat in history
+                replaceMessageInChatToHistory(result.chat);
+              } else {
+                // Add new chat to history
+                // We are saving the entire chat to the history since we didn't save when the chat was created
+                const chats = addNewChatToHistory(result.chat);
+                const history = renderHistoryList(chats);
+                const historyList = document.getElementById('history-list');
+                if (historyList) {
+                  historyList.innerHTML = history;
+                  attachHistoryEventListeners();
+                }
               }
             }
-          }
-          /*
-           * Since this function is called only when a new chat is created,
-           * We will only render the message from the assistant.
-           */
-          const assistantMessage = result.chat.messages.find((message: {role: string}) => message.role === 'assistant');
+            /*
+             * Since this function is called only when a new chat is created,
+             * We will only render the message from the assistant.
+             */
+            const assistantMessage = result.chat.messages.find(
+              (message: {role: string}) => message.role === 'assistant'
+            );
 
-          if (!assistantMessage) {
-            messageElement.innerHTML = `<div style="color: red;">We could not generate a response for that.</div>`;
-            return;
-          }
+            if (!assistantMessage) {
+              messageElement.innerHTML = `<div style="color: red;">We could not generate a response for that.</div>`;
+              return;
+            }
 
-          // Generate unique ID for this message
-          const messageId = assistantMessage.id;
-          // Initialize language state for this message (default to 'en')
-          messageLanguageState.set(messageId, 'en');
+            // Generate unique ID for this message
+            const messageId = assistantMessage.id;
+            // Initialize language state for this message (default to 'en')
+            messageLanguageState.set(messageId, 'en');
 
-          /*
-           * With multiple parts and multi modal support,
-           * This will be re-implemented in the future.
-           */
-          const messageParts = assistantMessage.parts.map((part: {text: string}) => part.text).join(' ');
+            /*
+             * With multiple parts and multi modal support,
+             * This will be re-implemented in the future.
+             */
+            const messageParts = assistantMessage.parts.map((part: {text: string}) => part.text).join(' ');
 
-          messageElement.innerHTML = generateResponseMessageWithoutOuterDiv({
-            content: messageParts,
-            id: messageId,
-            timestamp: new Date(assistantMessage.createdAt).getTime(),
+            messageElement.innerHTML = generateResponseMessageWithoutOuterDiv({
+              content: messageParts,
+              id: messageId,
+              timestamp: new Date(assistantMessage.createdAt).getTime(),
+            });
+
+            // Add event listener for this specific message's translate button
+            attachEventListenersToTranslateSelector([assistantMessage]);
+          })
+          .catch((error: Error) => {
+            messageElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error.message}</div>`;
           });
-
-          // Add event listener for this specific message's translate button
-          attachEventListenersToTranslateSelector([assistantMessage]);
-        })
-        .catch((error: Error) => {
-          messageElement.innerHTML = `<div style="color: red;">Error summarizing content: ${error.message}</div>`;
-        });
+      });
     };
 
     if (!userId) {
@@ -1510,10 +1534,7 @@ const clarity = (category: string, externalLink?: string): void => {
 
     const userMessage = document.createElement('div');
     const userInput = `Tell me about the ${category} of <a href="${internalLink}" target="_blank">${hostname}</a>.`;
-    userMessage.innerHTML = generateUserMessage(
-      userInput,
-      new Date().getTime()
-    );
+    userMessage.innerHTML = generateUserMessage(userInput, new Date().getTime());
     userMessage.id = 'initial-user-message';
     chatContent.appendChild(userMessage);
 
@@ -1562,107 +1583,125 @@ const clarity = (category: string, externalLink?: string): void => {
       category: string;
       userMessage: string;
     }): void => {
-      fetch(`${CLARITY_API_URL}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          link,
-          // domain: origin,
-          type: category,
-          userId,
-          chatId,
-          message: userMessage,
-          title: userMessage,
-        }),
-      })
-        .then((response) => response.json())
-        .then((result: {chat: Chat}) => {
-          if (!result.chat) {
-            showChatUI(
-              generateResponseMessage({
-                content: `<p style="color: red;">Error creating chat</p>`,
-                id: 'error_create_chat',
-                timestamp: new Date().getTime(),
-                translate: false,
-              })
-            );
-            return;
-          }
-
-          const chat = result.chat;
-          const systemMessages = chat.messages
-            .filter((message) => message.role === 'system')
-            .map((message) => ({
-              role: message.role as LanguageModelMessageRole,
-              content: message.parts.map((part) => part.text).join(''),
-            }));
-
-          const messages = chat.messages.filter((message) => message.role !== 'system');
-          chat.messages = messages;
-          const history = renderHistoryList([chat]);
-          const historyList = document.getElementById('history-list');
-          if (historyList) {
-            historyList.innerHTML = history;
-          }
-
-          if (!LanguageModel) return;
-
-          if (!promptSession) {
-            LanguageModel.availability({}).then((availability) => {
-              if (availability === 'unavailable') {
-                responseMessage.innerHTML = generateResponseMessage({
-                  content: 'Language model is unavailable',
-                  id: 'error_language_model_unavailable',
+      sendRequestWithToken((token) => {
+        fetch(`${CLARITY_API_URL}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            link,
+            type: category,
+            userId,
+            chatId,
+            message: userMessage,
+            title: userMessage,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error(response.statusText);
+          })
+          .then((result: {chat: Chat}) => {
+            if (!result.chat) {
+              showChatUI(
+                generateResponseMessage({
+                  content: `<p style="color: red;">Error creating chat</p>`,
+                  id: 'error_create_chat',
                   timestamp: new Date().getTime(),
                   translate: false,
-                });
-                throw new Error('Language model is unavailable');
-              }
-            });
-            LanguageModel.create({
-              initialPrompts: systemMessages,
-            }).then((model) => {
-              promptSession = model;
-              model.prompt(userMessage).then((response) => {
-                const message: Message = {
-                  id: `assistant_response_${new Date().getTime()}`,
-                  role: 'assistant' as const,
-                  parts: [{type: 'text', text: response}],
-                  attachments: [],
-                  createdAt: new Date().toISOString(),
-                  chatId: chatId,
-                };
-                responseElement.innerHTML = generateResponseMessageWithoutOuterDiv({
-                  content: response,
-                  id: message.id,
-                  timestamp: new Date().getTime(),
-                });
-                if (chatContent) {
-                  chatContent.scrollTop = chatContent.scrollHeight;
-                }
-                attachEventListenersToTranslateSelector([message]);
-
-                fetch(`${CLARITY_API_URL}/chat/message/${chatId}`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({content: response, role: 'assistant', chatId: chatId}),
                 })
-                  .then((response) => response.json())
-                  .then((result: {message: Message}) => {
-                    chat.messages.push(result.message);
-                    addNewChatToHistory(chat);
+              );
+              return;
+            }
+
+            const chat = result.chat;
+            const systemMessages = chat.messages
+              .filter((message) => message.role === 'system')
+              .map((message) => ({
+                role: message.role as LanguageModelMessageRole,
+                content: message.parts.map((part) => part.text).join(''),
+              }));
+
+            const messages = chat.messages.filter((message) => message.role !== 'system');
+            chat.messages = messages;
+            const history = renderHistoryList([chat]);
+            const historyList = document.getElementById('history-list');
+            if (historyList) {
+              historyList.innerHTML = history;
+            }
+
+            if (!LanguageModel) return;
+
+            if (!promptSession) {
+              LanguageModel.availability({}).then((availability) => {
+                if (availability === 'unavailable') {
+                  responseMessage.innerHTML = generateResponseMessage({
+                    content: 'Language model is unavailable',
+                    id: 'error_language_model_unavailable',
+                    timestamp: new Date().getTime(),
+                    translate: false,
                   });
+                  throw new Error('Language model is unavailable');
+                }
               });
-            });
-          }
-        })
-        .catch((error) => {
-          console.log('Browser summarize error:', error);
-        });
+              LanguageModel.create({
+                initialPrompts: systemMessages,
+              }).then((model) => {
+                promptSession = model;
+                model.prompt(userMessage).then((response) => {
+                  const message: Message = {
+                    id: `assistant_response_${new Date().getTime()}`,
+                    role: 'assistant' as const,
+                    parts: [{type: 'text', text: response}],
+                    attachments: [],
+                    createdAt: new Date().toISOString(),
+                    chatId: chatId,
+                  };
+                  responseElement.innerHTML = generateResponseMessageWithoutOuterDiv({
+                    content: response,
+                    id: message.id,
+                    timestamp: new Date().getTime(),
+                  });
+                  if (chatContent) {
+                    chatContent.scrollTop = chatContent.scrollHeight;
+                  }
+                  attachEventListenersToTranslateSelector([message]);
+
+                  sendRequestWithToken((token) => {
+                    fetch(`${CLARITY_API_URL}/chat/message/${chatId}`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: token,
+                      },
+                      body: JSON.stringify({content: response, role: 'assistant', chatId: chatId}),
+                    })
+                      .then((response) => {
+                        if (response.ok) {
+                          return response.json();
+                        }
+                        throw new Error(response.statusText);
+                      })
+                      .then((result: {message: Message}) => {
+                        chat.messages.push(result.message);
+                        addNewChatToHistory(chat);
+                      })
+                      .catch((error: Error) => {
+                        console.log('Browser summarize error:', error); // TODO: Handle this error
+                      });
+                  });
+                });
+              });
+            }
+          })
+          .catch((error) => {
+            console.log('Browser summarize error:', error); // TODO: Handle this error
+          });
+      });
     };
 
     chrome.storage.sync.get('llmProvider').then(({llmProvider}) => {

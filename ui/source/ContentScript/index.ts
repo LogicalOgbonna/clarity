@@ -1,8 +1,8 @@
 import {browser} from 'webextension-polyfill-ts';
 import Scrapper from '../common/scrapper';
 import {Policy} from '../common/types/index.d';
-import {CLARITY_API_URL, CLARITY_USER_ID_KEY} from '../common/constants';
-import { SETTINGS_KEYS } from '../Popup/utils';
+import {CLARITY_API_URL, CLARITY_TOKEN_KEY, CLARITY_USER_ID_KEY} from '../common/constants';
+import { getSetting, SETTINGS_KEYS } from '../common/utils';
 
 // Chat history caching utilities
 const getUserId = async (): Promise<string | null> => {
@@ -56,7 +56,14 @@ const initializeChatHistory = async (): Promise<void> => {
   // No valid cache found, fetch from API and store in localStorage
   try {
     console.log('No valid cache found, fetching chat history from API...');
-    const response = await fetch(`${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`);
+    const token = await getSetting(CLARITY_TOKEN_KEY, '');
+    const response = await fetch(`${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
 
     if (response.ok) {
       const data = await response.json();
@@ -70,7 +77,6 @@ const initializeChatHistory = async (): Promise<void> => {
       localStorage.setItem(cacheKey, JSON.stringify(dataWithTimestamp));
       console.log('Chat history fetched and cached in localStorage');
     } else {
-      console.error('Failed to fetch chat history:', response.status);
       // Initialize with empty array if fetch fails
       const emptyData = {
         chats: [],
@@ -81,7 +87,6 @@ const initializeChatHistory = async (): Promise<void> => {
       localStorage.setItem(cacheKey, JSON.stringify(emptyData));
     }
   } catch (error) {
-    console.error('Error fetching chat history:', error);
     // Initialize with empty array if fetch fails
     const emptyData = {
       chats: [],
@@ -182,7 +187,7 @@ const getOrFetchPolicy = async ({
 
   // If not in cache, fetch from server
   try {
-    const response = await fetch(`${CLARITY_API_URL}/policy/fetch-or-create`, {
+    const response = await fetch(`${CLARITY_API_URL}/scout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

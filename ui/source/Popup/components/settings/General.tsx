@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Languages} from '../shared/language';
-import {saveSetting, getSetting, SETTINGS_KEYS} from '../../utils';
+import {saveSetting, getSetting, SETTINGS_KEYS} from '../../../common/utils';
 
 export const General = (): React.ReactElement => {
   const [language, setLanguage] = React.useState('en');

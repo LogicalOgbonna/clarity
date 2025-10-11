@@ -1,10 +1,8 @@
 import React from 'react';
 import {useMutation, useQueryClient} from 'react-query';
 import {login, signup, User} from '../../../api';
-import {getSetting, saveSetting} from '../../../utils';
+import {getSetting, saveSetting} from '../../../../common/utils';
 import {CLARITY_BROWSER_ID_KEY, CLARITY_TOKEN_KEY, CLARITY_USER_ID_KEY} from '../../../../common/constants';
-import {LoadingSpinner} from '..';
-
 type AuthMode = 'signup' | 'login';
 
 type AuthUser = {
@@ -128,17 +126,20 @@ export const SignUpSignin = ({
       buttonText: string;
       title: string;
       subtitle: string;
+      loadingText: string
     }
   > = {
     signup: {
       buttonText: 'Sign Up',
       title: 'Setup a new account',
       subtitle: "Don't have an account?",
+      loadingText: 'Signing up...',
     },
     login: {
       buttonText: 'Login',
       title: 'Login to your account',
       subtitle: "Don't have an account?",
+      loadingText: 'Logging in...',
     },
   };
 
@@ -189,7 +190,7 @@ export const SignUpSignin = ({
             />
           </div>
           <button disabled={isLoading} className="setting-button secondary" type="button" onClick={handleSignUpLogin}>
-            {modeTextMapper[mode].buttonText} {isLoading && <LoadingSpinner text="Loading..." />}
+            {isLoading ? modeTextMapper[mode].loadingText : modeTextMapper[mode].buttonText}
           </button>
           <p className="text-center" onClick={handleToggleMode}>
             {modeTextMapper[mode].subtitle}

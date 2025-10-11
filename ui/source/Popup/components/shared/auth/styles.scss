@@ -44,10 +44,10 @@
         border-radius: 6px;
         font-size: 14px;
         background: #fff;
-
+        
         &:focus {
-          outline: none;
           border-color: #d32f2f;
+          outline: none;
           box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
         }
 
@@ -70,14 +70,16 @@
         align-self: flex-end;
         cursor: pointer;
         transition: all 0.2s ease;
+        color: white;
+        background-color: #d32f2f;
       }
       button:active {
-        background-color: #e0e0e0;
-        color: #333;
-      }
-      button:hover {
         background-color: #d32f2f;
         color: white;
+      }
+      button:hover {
+        background-color: #e0e0e0;
+        color: #333;
       }
     }
 

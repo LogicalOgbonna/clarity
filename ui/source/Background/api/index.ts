@@ -6,9 +6,10 @@ const getBrowserId = async (): Promise<void> => {
   if (existing.clarityBrowserId) {
     return;
   }
+  // TODO: create a better browser id that fingerprints the browser
   const clarityBrowserId = crypto.randomUUID();
   try {
-    const response = await fetch(`${CLARITY_API_URL}/user/browser`, {
+    const response = await fetch(`${CLARITY_API_URL}/auth/signup/browser`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

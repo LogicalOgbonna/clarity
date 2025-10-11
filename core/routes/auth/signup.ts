@@ -1,6 +1,9 @@
 import AuthService from '@/services/auth';
 import {Router} from 'express';
 import {AuthDto} from '@/db/dto/auth';
+import { ZodError } from 'zod';
+import { UserDto } from '@/db/dto/user';
+import { UserService } from '@/services/user';
 
 const router: Router = Router();
 
@@ -73,4 +76,37 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+router.post('/browser', async (req, res) => {
+  try {
+    const {browserId, name, email} = UserDto.createUserDto.parse(req.body);
+
+    const user = await UserService.createOrGetByBrowserId(browserId, name, email);
+
+    res.json({
+      user: {
+        id: user.id,
+        browserId: user.browserId,
+        numberOfSummaries: user.numberOfSummaries,
+      },
+      status: 'success',
+      message: 'User registered successfully',
+    });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues,
+        status: 'error',
+        message: 'Invalid request data',
+      });
+    }
+    res.status(500).json({
+      error: 'Internal server error',
+      status: 'error',
+      message: 'User registration failed',
+    });
+  }
+});
 export default router;

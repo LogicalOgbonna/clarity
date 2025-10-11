@@ -1,6 +1,6 @@
 import {CHAT_HISTORY_LIMIT, CLARITY_API_URL, CLARITY_BROWSER_ID_KEY, CLARITY_TOKEN_KEY} from '../../common/constants';
 import {ChatInLocalStorage} from '../components/chat/types';
-import {getSetting} from '../utils';
+import {getSetting} from '../../common/utils';
 
 export type Plan = 'pro' | 'team' | 'free';
 export interface User {

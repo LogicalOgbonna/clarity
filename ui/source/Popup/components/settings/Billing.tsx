@@ -33,7 +33,7 @@ export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => 
 
   const planFeatures: Record<Plan, React.ReactNode> = {
     free: (
-      <ul>
+      <ul style={{outline: 'none'}}>
         <li>✓ 10 analyses per month</li>
         <li>✓ Basic summaries</li>
         <li>✓ Standard languages</li>
@@ -42,7 +42,7 @@ export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => 
       </ul>
     ),
     pro: (
-      <ul>
+      <ul style={{outline: 'none'}}>
         <li>✓ Unlimited analyses</li>
         <li>✓ Advanced AI summaries</li>
         <li>✓ All languages</li>
@@ -142,7 +142,7 @@ export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => 
 
       <div className="settings-section">
         <h3>Billing History</h3>
-        <div className="billing-history">
+        {/* <div className="billing-history">
           <div className="history-item">
             <div className="history-date">Dec 2024</div>
             <div className="history-description">Free Plan</div>
@@ -156,7 +156,7 @@ export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => 
         </div>
         <button className="setting-button secondary" type="button">
           View all billing history
-        </button>
+        </button> */}
       </div>
     </div>
   );

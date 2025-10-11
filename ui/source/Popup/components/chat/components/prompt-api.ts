@@ -1,5 +1,5 @@
 import {Message} from '../types.d';
-import {getSetting, SETTINGS_KEYS} from '../../../utils';
+import {getSetting, SETTINGS_KEYS} from '../../../../common/utils';
 
 interface AskLLMProps {
   prompt: string;

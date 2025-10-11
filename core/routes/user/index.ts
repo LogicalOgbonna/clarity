@@ -5,40 +5,6 @@ import {ZodError} from 'zod';
 
 const router: Router = Router();
 
-// POST /api/user/browser - Register or get user by browser ID (for extension installation)
-router.post('/browser', async (req, res) => {
-  try {
-    const {browserId, name, email} = UserDto.createUserDto.parse(req.body);
-
-    const user = await UserService.createOrGetByBrowserId(browserId, name, email);
-
-    res.json({
-      user: {
-        id: user.id,
-        browserId: user.browserId,
-        numberOfSummaries: user.numberOfSummaries,
-      },
-      status: 'success',
-      message: 'User registered successfully',
-    });
-  } catch (error) {
-    console.error('Error registering user:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
-    }
-    res.status(500).json({
-      error: 'Internal server error',
-      status: 'error',
-      message: 'User registration failed',
-    });
-  }
-});
-
 // GET /api/user/by-browser/:browserId - Get user by browser ID
 router.get('/browser/:browserId', async (req, res) => {
   try {

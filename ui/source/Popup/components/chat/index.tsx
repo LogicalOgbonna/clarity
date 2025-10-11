@@ -6,7 +6,7 @@ import {SignUpSignin} from '../shared/auth';
 import {Chat} from './components/Chat';
 import {ChatList} from './components/ChatList';
 import {ChatData, ChatInLocalStorage} from './types.d';
-import {getSetting} from '../../utils';
+import {getSetting} from '../../../common/utils';
 
 import './styles.scss';
 
@@ -26,7 +26,7 @@ export const ChatComponent = ({
   }
 
   if (!user || !user.name) {
-    return <SignUpSignin defaultMode="login" />;
+    return <SignUpSignin defaultMode="signup" />;
   }
 
   const [activeChat, setActiveChat] = React.useState<ChatData | null>(null);
