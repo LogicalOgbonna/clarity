@@ -69,7 +69,7 @@ const router: Router = Router();
 router.post('/', async (req, res) => {
   try {
     const {browserId, email, password, name} = AuthDto.signupDto.parse(req.body);
-    const user = await AuthService.signup({browserId, email, password, name});
+    const user = await AuthService.signup({browserId, email: email.trim().toLowerCase(), password, name});
     res.json(user);
   } catch (error) {
     res.status(500).json({error: 'Internal server error'});

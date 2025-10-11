@@ -19,6 +19,7 @@ export class UserDto {
     name: string().optional(),
     email: email().optional(),
     numberOfSummaries: number().int().min(0).optional(),
+    password: string().optional(),
   });
 
   public static findByBrowserIdDto = object({
