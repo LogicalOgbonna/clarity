@@ -1,7 +1,7 @@
 import UserRepository from '@/db/repository/user';
 import {UserDto, type InferType} from '@/db/dto/user';
 import {type user as User} from '@prisma/client';
-import {type Prisma} from '@prisma/client';
+import {Prisma} from '@prisma/client';
 import {db} from '@/db';
 
 export class UserService {
@@ -28,21 +28,18 @@ export class UserService {
    * @param data - The browser ID to find
    * @returns A promise that resolves to the user if found, null otherwise
    */
-  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User | null> {
+  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User> {
     return UserRepository.findByBrowserId(data);
   }
 
   /**
    * Updates a user in the database.
-   * @param data - The user ID to update
+   * @param where - The user ID to update
    * @param user - The user data to be updated
    * @returns A promise that resolves to the updated user
    */
-  static async update(
-    data: InferType<typeof UserDto.idDto>,
-    user: InferType<typeof UserDto.updateUserDto>
-  ): Promise<User> {
-    return UserRepository.update(data, user);
+  static async update(where: Prisma.userWhereUniqueInput, user: Prisma.userUpdateInput): Promise<User> {
+    return UserRepository.update(where, user);
   }
 
   /**
@@ -76,17 +73,22 @@ export class UserService {
       // First try to find existing user with this browser ID
       const existingUser = await UserRepository.findByBrowserId({browserId});
 
-      if (existingUser) {
-        return existingUser;
-      }
+      return existingUser;
 
       // If no existing user found, create a new one
-      return UserRepository.create({
-        browserId,
-        name,
-        email,
-      });
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new Error('User already exists');
+        }
+        if (error.code === 'P2025') {
+          return UserRepository.create({
+            browserId,
+            name,
+            email,
+          });
+        }
+      }
       console.error('Error creating or getting user by browser ID:', error);
       throw error;
     }

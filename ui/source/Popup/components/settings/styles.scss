@@ -3,12 +3,12 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    
+
     .settings-navigation {
       display: flex;
       border-bottom: 1px solid #e0e0e0;
       margin-bottom: 16px;
-      
+
       .settings-nav-item {
         flex: 1;
         padding: 12px 16px;
@@ -20,12 +20,12 @@
         color: #666;
         border-bottom: 2px solid transparent;
         transition: all 0.2s ease;
-        
+
         &:hover {
           color: #333;
           background-color: #f5f5f5;
         }
-        
+
         &.active {
           color: #d32f2f;
           border-bottom-color: #d32f2f;
@@ -33,17 +33,17 @@
         }
       }
     }
-    
+
     .settings-content-wrapper {
       flex: 1;
       overflow-y: auto;
       padding: 0 4px;
     }
-    
+
     .settings-content {
       .settings-section {
         margin-bottom: 24px;
-        
+
         h3 {
           font-size: 16px;
           font-weight: 600;
@@ -52,10 +52,10 @@
           padding-bottom: 8px;
           border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .setting-item {
           margin-bottom: 16px;
-          
+
           label {
             display: block;
             font-size: 14px;
@@ -63,7 +63,7 @@
             color: #333;
             margin-bottom: 6px;
           }
-          
+
           .setting-input {
             width: 100%;
             padding: 8px 12px;
@@ -71,31 +71,41 @@
             border-radius: 6px;
             font-size: 14px;
             background: #fff;
-            
+
             &:focus {
               outline: none;
               border-color: #d32f2f;
               box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
             }
+
+            &.setting-input--error {
+              border-color: #d32f2f;
+              box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.08);
+            }
+
+            &.setting-input--error:focus {
+              border-color: #d32f2f;
+              box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+            }
           }
-          
+
           .setting-toggle {
             display: flex;
             align-items: center;
             gap: 8px;
-            
-            input[type="checkbox"] {
+
+            input[type='checkbox'] {
               width: 18px;
               height: 18px;
               accent-color: #d32f2f;
             }
-            
+
             label {
               margin-bottom: 0;
               cursor: pointer;
             }
           }
-          
+
           .setting-button {
             padding: 8px 16px;
             border: 1px solid #ddd;
@@ -103,37 +113,37 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
-            
+
             &.primary {
               background-color: #d32f2f;
               color: white;
               border-color: #d32f2f;
-              
+
               &:hover {
                 background-color: #b71c1c;
               }
             }
-            
+
             &.secondary {
               background-color: #fff;
               color: #333;
-              
+
               &:hover {
                 background-color: #f5f5f5;
               }
             }
-            
+
             &.danger {
               background-color: #fff;
               color: #d32f2f;
               border-color: #d32f2f;
-              
+
               &:hover {
                 background-color: #ffebee;
               }
             }
           }
-          
+
           .setting-range {
             width: 100%;
             height: 6px;
@@ -142,7 +152,7 @@
             outline: none;
             -webkit-appearance: none;
             margin: 8px 0;
-            
+
             &::-webkit-slider-thumb {
               -webkit-appearance: none;
               appearance: none;
@@ -154,7 +164,7 @@
               border: 2px solid #fff;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             }
-            
+
             &::-moz-range-thumb {
               width: 20px;
               height: 20px;
@@ -165,7 +175,7 @@
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             }
           }
-          
+
           .range-labels {
             display: flex;
             justify-content: space-between;
@@ -175,7 +185,7 @@
           }
         }
       }
-      
+
       // Chrome settings specific styles
       .chrome-settings {
         margin-top: 16px;
@@ -183,7 +193,7 @@
         background: #f8f9fa;
         border-radius: 8px;
         border: 1px solid #e9ecef;
-        
+
         h4 {
           margin: 0 0 16px 0;
           font-size: 14px;
@@ -191,7 +201,7 @@
           color: #333;
         }
       }
-      
+
       // Profile card styles
       .profile-card {
         display: flex;
@@ -201,7 +211,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         background: #fafafa;
-        
+
         .profile-avatar {
           .avatar-icon {
             font-size: 32px;
@@ -214,16 +224,16 @@
             border-radius: 50%;
           }
         }
-        
+
         .profile-info {
           flex: 1;
-          
+
           h4 {
             margin: 0 0 4px 0;
             font-size: 16px;
             color: #333;
           }
-          
+
           p {
             margin: 0 0 8px 0;
             font-size: 14px;
@@ -231,47 +241,48 @@
           }
         }
       }
-      
+
       // Plan card styles
       .plan-card {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 16px;
         background: #fff;
-        
+
         .plan-header {
+          text-transform: capitalize;
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 12px;
-          
+
           h4 {
             margin: 0;
             font-size: 16px;
             color: #333;
           }
-          
+
           .plan-status {
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
-            
+
             &.active {
               background-color: #e8f5e8;
               color: #2e7d32;
             }
           }
         }
-        
+
         .plan-features {
           margin-bottom: 16px;
-          
+
           ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            
+
             li {
               padding: 4px 0;
               font-size: 14px;
@@ -279,7 +290,7 @@
             }
           }
         }
-        
+
         .plan-usage {
           .usage-item {
             display: flex;
@@ -287,13 +298,13 @@
             font-size: 14px;
             margin-bottom: 8px;
           }
-          
+
           .usage-bar {
             height: 6px;
             background-color: #e0e0e0;
             border-radius: 3px;
             overflow: hidden;
-            
+
             .usage-progress {
               height: 100%;
               background-color: #d32f2f;
@@ -302,13 +313,13 @@
           }
         }
       }
-      
+
       // Upgrade options styles
       .upgrade-options {
         display: flex;
         gap: 16px;
         flex-wrap: wrap;
-        
+
         .upgrade-card {
           flex: 1;
           min-width: 200px;
@@ -317,11 +328,11 @@
           padding: 20px;
           background: #fff;
           position: relative;
-          
+
           &.featured {
             border-color: #d32f2f;
             box-shadow: 0 2px 8px rgba(211, 47, 47, 0.1);
-            
+
             .featured-badge {
               position: absolute;
               top: -8px;
@@ -335,45 +346,45 @@
               font-weight: 500;
             }
           }
-          
+
           h4 {
             margin: 0 0 12px 0;
             font-size: 18px;
             color: #333;
           }
-          
+
           .price {
             margin-bottom: 16px;
-            
+
             .currency {
               font-size: 16px;
               color: #666;
             }
-            
+
             .amount {
               font-size: 32px;
               font-weight: 600;
               color: #333;
             }
-            
+
             .period {
               font-size: 14px;
               color: #666;
             }
           }
-          
+
           .features {
             list-style: none;
             padding: 0;
             margin: 0 0 20px 0;
-            
+
             li {
               padding: 6px 0;
               font-size: 14px;
               color: #666;
             }
           }
-          
+
           .upgrade-button {
             width: 100%;
             padding: 12px;
@@ -385,23 +396,23 @@
             transition: all 0.2s ease;
             background-color: #f5f5f5;
             color: #333;
-            
+
             &.primary {
               background-color: #d32f2f;
               color: white;
-              
+
               &:hover {
                 background-color: #b71c1c;
               }
             }
-            
+
             &:hover {
               background-color: #e0e0e0;
             }
           }
         }
       }
-      
+
       // Billing history styles
       .billing-history {
         .history-item {
@@ -410,21 +421,21 @@
           align-items: center;
           padding: 12px 0;
           border-bottom: 1px solid #f0f0f0;
-          
+
           &:last-child {
             border-bottom: none;
           }
-          
+
           .history-date {
             font-size: 14px;
             color: #666;
           }
-          
+
           .history-description {
             font-size: 14px;
             color: #333;
           }
-          
+
           .history-amount {
             font-size: 14px;
             font-weight: 500;
@@ -432,7 +443,7 @@
           }
         }
       }
-      
+
       // Security and data management styles
       .security-item,
       .data-item {
@@ -443,7 +454,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         background: #fafafa;
-        
+
         .security-info,
         .data-info {
           h4 {
@@ -451,7 +462,7 @@
             font-size: 14px;
             color: #333;
           }
-          
+
           p {
             margin: 0;
             font-size: 12px;
@@ -459,7 +470,7 @@
           }
         }
       }
-      
+
       // Connected accounts styles
       .connected-accounts {
         .account-item {
@@ -471,12 +482,12 @@
           border-radius: 8px;
           margin-bottom: 12px;
           background: #fff;
-          
+
           .account-info {
             display: flex;
             align-items: center;
             gap: 12px;
-            
+
             .account-icon {
               font-size: 24px;
               width: 40px;
@@ -487,14 +498,14 @@
               background: #f5f5f5;
               border-radius: 8px;
             }
-            
+
             .account-details {
               h4 {
                 margin: 0 0 4px 0;
                 font-size: 14px;
                 color: #333;
               }
-              
+
               p {
                 margin: 0;
                 font-size: 12px;

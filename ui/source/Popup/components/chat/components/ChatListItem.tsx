@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {ChatProps} from '../types.d';
-import {formatTimestamp} from '../../../utils';
+import {formatTimestamp} from '../../../../common/utils';
 
 export const ChatListItem: React.FC<ChatProps> = ({
   chat,

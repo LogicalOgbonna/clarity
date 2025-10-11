@@ -1,16 +1,27 @@
 import {browser} from 'webextension-polyfill-ts';
 import Scrapper from '../common/scrapper';
 import {Policy} from '../common/types/index.d';
-import {CLARITY_API_URL} from '../common/constants';
+import {CLARITY_API_URL, CLARITY_TOKEN_KEY, CLARITY_USER_ID_KEY} from '../common/constants';
+import { getSetting, SETTINGS_KEYS } from '../common/utils';
 
 // Chat history caching utilities
 const getUserId = async (): Promise<string | null> => {
   try {
-    const result = await browser.storage.sync.get('clarityUserId');
-    return result.clarityUserId || null;
+    const result = await browser.storage.sync.get(CLARITY_USER_ID_KEY);
+    return result[CLARITY_USER_ID_KEY] || null;
   } catch (error) {
     console.error('Error getting user ID:', error);
     return null;
+  }
+};
+
+const getAutoAnalyzePreference = async (): Promise<boolean> => {
+  try {
+    const result = await browser.storage.sync.get(SETTINGS_KEYS.AUTO_ANALYZE);
+    return result[SETTINGS_KEYS.AUTO_ANALYZE] || false;
+  } catch (error) {
+    console.error('Error getting auto analyze preference:', error);
+    return false;
   }
 };
 
@@ -45,9 +56,14 @@ const initializeChatHistory = async (): Promise<void> => {
   // No valid cache found, fetch from API and store in localStorage
   try {
     console.log('No valid cache found, fetching chat history from API...');
-    const response = await fetch(
-      `${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`
-    );
+    const token = await getSetting(CLARITY_TOKEN_KEY, '');
+    const response = await fetch(`${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
 
     if (response.ok) {
       const data = await response.json();
@@ -61,7 +77,6 @@ const initializeChatHistory = async (): Promise<void> => {
       localStorage.setItem(cacheKey, JSON.stringify(dataWithTimestamp));
       console.log('Chat history fetched and cached in localStorage');
     } else {
-      console.error('Failed to fetch chat history:', response.status);
       // Initialize with empty array if fetch fails
       const emptyData = {
         chats: [],
@@ -72,7 +87,6 @@ const initializeChatHistory = async (): Promise<void> => {
       localStorage.setItem(cacheKey, JSON.stringify(emptyData));
     }
   } catch (error) {
-    console.error('Error fetching chat history:', error);
     // Initialize with empty array if fetch fails
     const emptyData = {
       chats: [],
@@ -166,9 +180,14 @@ const getOrFetchPolicy = async ({
     return null;
   }
 
+  const autoAnalyze = await getAutoAnalyzePreference();
+  if (!autoAnalyze) {
+    return null;
+  }
+
   // If not in cache, fetch from server
   try {
-    const response = await fetch(`${CLARITY_API_URL}/policy/fetch-or-create`, {
+    const response = await fetch(`${CLARITY_API_URL}/scout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

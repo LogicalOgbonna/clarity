@@ -1,21 +1,34 @@
 import * as React from 'react';
-import {browser} from 'webextension-polyfill-ts';
-import {CHAT_HISTORY_LIMIT, CLARITY_API_URL} from '../../../common/constants';
+import {CLARITY_USER_ID_KEY} from '../../../common/constants';
+import {getChatHistory, User} from '../../api';
 import {LoadingSpinner} from '../shared';
+import {SignUpSignin} from '../shared/auth';
+import {Chat} from './components/Chat';
 import {ChatList} from './components/ChatList';
 import {ChatData, ChatInLocalStorage} from './types.d';
+import {getSetting} from '../../../common/utils';
 
 import './styles.scss';
-import {Chat} from './components/Chat';
 
 type Action = 'history' | 'chat';
 
-const getUserID = async (): Promise<string | null> => {
-  const {clarityUserId} = await browser.storage.sync.get('clarityUserId');
-  return clarityUserId || null;
-};
+export const ChatComponent = ({
+  user,
+  isLoading,
+  isFetching,
+}: {
+  user?: User;
+  isLoading: boolean;
+  isFetching: boolean;
+}): React.ReactElement => {
+  if (isLoading || isFetching) {
+    return <LoadingSpinner text="Loading chat history..." />;
+  }
 
-export const ChatComponent = (): React.ReactElement => {
+  if (!user || !user.name) {
+    return <SignUpSignin defaultMode="signup" />;
+  }
+
   const [activeChat, setActiveChat] = React.useState<ChatData | null>(null);
   const [action, setAction] = React.useState<Action>('history');
 
@@ -29,11 +42,14 @@ export const ChatComponent = (): React.ReactElement => {
   const [loading, setLoading] = React.useState<boolean>(true);
 
   const loadChatHistory = async (userIdParam: string): Promise<void> => {
-    const response = await fetch(
-      `${CLARITY_API_URL}/chat/history/${userIdParam}?page=1&limit=${CHAT_HISTORY_LIMIT}`
-    );
-    if (response.ok) {
-      const data = await response.json();
+    const response = await getChatHistory({userId: userIdParam});
+    if (response.status === 'success') {
+      const data = {
+        chats: response.chats,
+        pagination: response.pagination,
+        status: response.status,
+        cachedAt: response.cachedAt,
+      };
       setChatHistory(data);
     } else {
       setChatHistory({
@@ -57,15 +73,13 @@ export const ChatComponent = (): React.ReactElement => {
 
   const handleDeleteChat = (chatId: string): void => {
     if (userId) {
-      const updatedHistory = chatHistory.chats.filter(
-        (chat) => chat.id !== chatId
-      );
+      const updatedHistory = chatHistory.chats.filter((chat) => chat.id !== chatId);
       setChatHistory({...chatHistory, chats: updatedHistory});
     }
   };
 
   const initChat = async (): Promise<void> => {
-    const userd = await getUserID();
+    const userd = await getSetting(CLARITY_USER_ID_KEY, '');
     setUserId(userd);
     await loadChatHistory(userd!);
   };
@@ -85,25 +99,9 @@ export const ChatComponent = (): React.ReactElement => {
   };
 
   const actions: Record<Action, React.ReactElement> = {
-    history: (
-      <ChatList
-        chatHistory={chatHistory.chats}
-        onChatClick={handleChatClick}
-        onDeleteChat={handleDeleteChat}
-      />
-    ),
+    history: <ChatList chatHistory={chatHistory.chats} onChatClick={handleChatClick} onDeleteChat={handleDeleteChat} />,
     chat: <Chat chat={activeChat} onBack={handleBackToHistory} />,
   };
-
-  if (!userId) {
-    return (
-      <div className="welcome-section">
-        <span className="icon">🔐</span>
-        <div className="title">Please Sign In</div>
-        <div className="subtitle">Sign in to view your chat history</div>
-      </div>
-    );
-  }
 
   if (chatHistory.chats.length === 0) {
     return (

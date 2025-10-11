@@ -1,30 +1,18 @@
 import * as React from 'react';
+import {User} from '../../api';
+import {SignUpSignin} from '../shared/auth';
 
-export const Accounts = (): React.ReactElement => {
-  const [user] = React.useState({
-    name: 'N/A',
-    email: 'N/A',
-    avatar: '👤',
-  });
+interface AccountProps {
+  user: User | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+}
 
-  const [connectedAccounts, setConnectedAccounts] = React.useState([
-    {
-      id: 'google',
-      name: 'Google',
-      connected: true,
-      email: 'john.doe@gmail.com',
-    }
-  ]);
+export const Accounts = ({user}: AccountProps): React.ReactElement => {
 
-  const handleAccountToggle = (accountId: string): void => {
-    setConnectedAccounts((prev) =>
-      prev.map((account) =>
-        account.id === accountId
-          ? {...account, connected: !account.connected}
-          : account
-      )
-    );
-  };
+  if (!user || !user.email || !user.name) {
+    return <SignUpSignin defaultMode="signup" />;
+  }
 
   return (
     <div className="settings-content">
@@ -32,7 +20,7 @@ export const Accounts = (): React.ReactElement => {
         <h3>Profile Information</h3>
         <div className="profile-card">
           <div className="profile-avatar">
-            <span className="avatar-icon">{user.avatar}</span>
+            <span className="avatar-icon">{user.name.charAt(0)}</span>
           </div>
           <div className="profile-info">
             <h4>{user.name}</h4>
@@ -69,46 +57,6 @@ export const Accounts = (): React.ReactElement => {
           </div>
         </div>
       </div> */}
-
-      <div className="settings-section">
-        <h3>Connected Accounts</h3>
-        <div className="connected-accounts">
-          {connectedAccounts.map((account) => (
-            <div key={account.id} className="account-item">
-              <div className="account-info">
-                <div className="account-icon">
-                  {account.id === 'google' && '🔍'}
-                  {account.id === 'github' && '🐙'}
-                  {account.id === 'microsoft' && '🪟'}
-                </div>
-                <div className="account-details">
-                  <h4>{account.name}</h4>
-                  {account.connected && account.email && <p>{account.email}</p>}
-                </div>
-              </div>
-              <div className="account-actions">
-                {account.connected ? (
-                  <button
-                    type="button"
-                    className="setting-button danger"
-                    onClick={() => handleAccountToggle(account.id)}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="setting-button primary"
-                    onClick={() => handleAccountToggle(account.id)}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div className="settings-section">
         <h3>Data Management</h3>

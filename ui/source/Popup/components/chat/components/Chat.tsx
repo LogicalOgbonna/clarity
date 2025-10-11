@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {ChatData, Message} from '../types.d';
-import {formatTimestamp, getSetting, SETTINGS_KEYS} from '../../../utils';
+import {formatTimestamp, getSetting, SETTINGS_KEYS} from '../../../../common/utils';
 import {CLARITY_API_URL} from '../../../../common/constants';
 import {askLLM, closeLLM} from './prompt-api';
 import {LanguageOptions} from '../../shared/language';
@@ -12,7 +12,7 @@ interface ChatProps {
 
 declare const Translator: {
   availability({
-    sourceLanguage,
+    sourceLanguage, 
     targetLanguage,
     monitor,
   }: {

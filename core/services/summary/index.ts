@@ -9,6 +9,7 @@ import {CustomUIDataTypes} from '@/db/dto/message';
 import {formatISO} from 'date-fns';
 import {type chat as Chat} from '@prisma/client';
 import {object, string} from 'zod';
+import { UserService } from '../user';
 
 export class SummaryService extends SummaryDto {
   /**
@@ -49,6 +50,7 @@ export class SummaryService extends SummaryDto {
         select: {content: true, id: true, createdAt: true},
       });
       // TODO: check if createdAt for the latest policy is more than 1 week old, fetch a new one and compare their dates
+      // TODO: add restriction to the number of summaries a user can create in a month
 
       let policyContent: string;
       let policyId: number | undefined;
@@ -120,6 +122,7 @@ export class SummaryService extends SummaryDto {
 
       // Create assistant message with summary
       await MessageService.createMessage({chatId, content: summary, role: 'assistant'});
+      await UserService.incrementSummaries(userId);
 
       const chat = await ChatService.findByID({where: {id: chatId}});
 

@@ -1,4 +1,9 @@
+import AuthService from '@/services/auth';
 import {Router} from 'express';
+import {AuthDto} from '@/db/dto/auth';
+import { ZodError } from 'zod';
+import { UserDto } from '@/db/dto/user';
+import { UserService } from '@/services/user';
 
 const router: Router = Router();
 
@@ -17,6 +22,9 @@ const router: Router = Router();
  *           schema:
  *             type: object
  *             properties:
+ *               browserId:
+ *                 type: string
+ *                 description: User ID
  *               email:
  *                 type: string
  *                 format: email
@@ -29,6 +37,7 @@ const router: Router = Router();
  *                 type: string
  *                 description: User full name
  *             required:
+ *               - browserId
  *               - email
  *               - password
  *               - name
@@ -43,7 +52,9 @@ const router: Router = Router();
  *                 user:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     browserId:
+ *                       type: string
+ *                     browserId:
  *                       type: string
  *                     email:
  *                       type: string
@@ -55,8 +66,47 @@ const router: Router = Router();
  *       400:
  *         description: Bad request - validation error or user already exists
  */
-router.post('/', (req, res) => {
-  res.send('Hello World');
+router.post('/', async (req, res) => {
+  try {
+    const {browserId, email, password, name} = AuthDto.signupDto.parse(req.body);
+    const user = await AuthService.signup({browserId, email, password, name});
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({error: 'Internal server error'});
+  }
 });
 
+
+router.post('/browser', async (req, res) => {
+  try {
+    const {browserId, name, email} = UserDto.createUserDto.parse(req.body);
+
+    const user = await UserService.createOrGetByBrowserId(browserId, name, email);
+
+    res.json({
+      user: {
+        id: user.id,
+        browserId: user.browserId,
+        numberOfSummaries: user.numberOfSummaries,
+      },
+      status: 'success',
+      message: 'User registered successfully',
+    });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues,
+        status: 'error',
+        message: 'Invalid request data',
+      });
+    }
+    res.status(500).json({
+      error: 'Internal server error',
+      status: 'error',
+      message: 'User registration failed',
+    });
+  }
+});
 export default router;

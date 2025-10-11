@@ -24,6 +24,10 @@ export class UserDto {
   public static findByBrowserIdDto = object({
     browserId: string().min(1, 'Browser ID is required'),
   });
+
+  public static findByEmailDto = object({
+    email: email().min(1, 'Email is required'),
+  });
 }
 
 export {type InferType};
