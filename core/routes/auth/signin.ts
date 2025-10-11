@@ -1,3 +1,5 @@
+import {AuthDto} from '@/db/dto/auth';
+import AuthService from '@/services/auth';
 import {Router} from 'express';
 
 const router: Router = Router();
@@ -52,24 +54,18 @@ const router: Router = Router();
  *       400:
  *         description: Bad request - missing required fields
  */
-router.post('/', (req, res) => {
-  res.send('Hello World');
-});
 
-/**
- * @swagger
- * /api/auth/signin:
- *   get:
- *     tags:
- *       - Authentication
- *     summary: Get signin page
- *     description: Get the signin page (if you have a web interface)
- *     responses:
- *       200:
- *         description: Signin page
- */
-router.get('/', (req, res) => {
-  res.send('Hello World');
+router.post('/', async (req, res) => {
+  try {
+    const payload = AuthDto.signinDto.parse(req.body);
+    const {
+      user: {password, ...user},
+      token,
+    } = await AuthService.signin(payload);
+    res.json({user, token});
+  } catch (error) {
+    res.status(500).json({error: 'Internal server error'});
+  }
 });
 
 export default router;

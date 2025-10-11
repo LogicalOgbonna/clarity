@@ -3,6 +3,7 @@ import express, {type Application} from 'express';
 import router from '@/routes';
 import authRouter from '@/routes/auth';
 import {setupSwagger} from '@/config/swagger';
+import { authMiddleware } from './middleware/auth';
 
 const app: Application = express();
 
@@ -11,8 +12,8 @@ app.use(cors());
 
 setupSwagger(app);
 
-app.use('/api', router);
-
 app.use('/api/auth', authRouter);
+app.use('/api', authMiddleware, router);
+
 
 export default app;

@@ -16,10 +16,13 @@ model user {
   browserId         String   @unique
   numberOfSummaries Int      @default(0)
 
+  chats             chat[]
+
+  password          String?
+  plan              String   @default("free")
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
-  chats             chat[]
 }
 
 

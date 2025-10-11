@@ -4,22 +4,12 @@ import './styles.scss';
 import {General} from './General';
 import {Billing} from './Billing';
 import {Accounts} from './Accounts';
-import {useQuery} from 'react-query';
-import {getUserByBrowserId} from '../../api';
+import {User} from '../../api';
 
 export type SettingsTabType = 'general' | 'billing' | 'accounts';
 
-export const Settings = (): React.ReactElement => {
-  const [activeTab, setActiveTab] = React.useState<SettingsTabType>('accounts');
-
-  const {data, isLoading, isFetching} = useQuery({
-    queryKey: ['user-data'],
-    queryFn: getUserByBrowserId,
-    onSuccess: (data) => {
-      console.log('data:');
-      console.log(data);
-    },
-  });
+export const Settings = ({user, isLoading, isFetching}: {user?: User; isLoading: boolean; isFetching: boolean}): React.ReactElement => {
+  const [activeTab, setActiveTab] = React.useState<SettingsTabType>('general');
 
   const handleTabClick = (tab: SettingsTabType): void => {
     setActiveTab(tab);
@@ -27,8 +17,8 @@ export const Settings = (): React.ReactElement => {
 
   const tabs: Record<SettingsTabType, React.ReactElement> = {
     general: <General />,
-    billing: <Billing user={data?.user} isLoading={isLoading} isFetching={isFetching} switchTab={handleTabClick} />,
-    accounts: <Accounts user={data?.user} isLoading={isLoading} isFetching={isFetching} />,
+    billing: <Billing user={user} isLoading={isLoading} isFetching={isFetching} switchTab={handleTabClick} />,
+    accounts: <Accounts user={user} isLoading={isLoading} isFetching={isFetching} />,
   };
 
   const settingsTabs: Array<{id: SettingsTabType; label: string}> = [

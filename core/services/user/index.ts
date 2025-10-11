@@ -28,21 +28,21 @@ export class UserService {
    * @param data - The browser ID to find
    * @returns A promise that resolves to the user if found, null otherwise
    */
-  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User | null> {
+  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User> {
     return UserRepository.findByBrowserId(data);
   }
 
   /**
    * Updates a user in the database.
-   * @param data - The user ID to update
+   * @param where - The user ID to update
    * @param user - The user data to be updated
    * @returns A promise that resolves to the updated user
    */
   static async update(
-    data: InferType<typeof UserDto.idDto>,
-    user: InferType<typeof UserDto.updateUserDto>
+    where: Prisma.userWhereUniqueInput,
+    user: Prisma.userUpdateInput
   ): Promise<User> {
-    return UserRepository.update(data, user);
+    return UserRepository.update(where, user);
   }
 
   /**

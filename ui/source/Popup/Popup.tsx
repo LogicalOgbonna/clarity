@@ -5,25 +5,38 @@ import Layout, {type TabType} from './layout';
 import {Home} from './components/home';
 import {ChatComponent} from './components/chat';
 import {Settings} from './components/settings';
-import {QueryClient, QueryClientProvider} from 'react-query';
+import {User} from './api';
 
-const Popup: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState<TabType>('home');
-  const queryClient = new QueryClient();
-  const handleTabClick = (tab: TabType): void => {
-    setActiveTab(tab);
-  };
+import {Providers} from './providers';
+const Popup: React.FC = (): React.ReactElement => {
 
-  const tabs: Record<TabType, React.ReactElement> = {
-    home: <Home />,
-    chat: <ChatComponent />,
-    settings: <Settings />,
+  const renderTab = ({
+    tab,
+    user,
+    isLoading,
+    isFetching,
+  }: {
+    tab: TabType;
+    user?: User;
+    isLoading: boolean;
+    isFetching: boolean;
+  }): React.ReactElement => {
+    switch (tab) {
+      case 'home':
+        return <Home user={user} isLoading={isLoading} isFetching={isFetching} />;
+      case 'chat':
+        return <ChatComponent user={user} isLoading={isLoading} isFetching={isFetching} />;
+      case 'settings':
+        return <Settings user={user} isLoading={isLoading} isFetching={isFetching} />;
+    }
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Layout handleTabClick={handleTabClick}>{tabs[activeTab]}</Layout>
-    </QueryClientProvider>
+    <Providers>
+      <Layout>
+        {(data) => renderTab(data)}
+      </Layout>
+    </Providers>
   );
 };
 

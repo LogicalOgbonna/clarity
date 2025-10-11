@@ -2,6 +2,7 @@
 @import '../styles/reset';
 @import '../styles/variables';
 @import './components/shared/loading/styles';
+@import './components/shared/auth/styles';
 
 body {
   color: $black;

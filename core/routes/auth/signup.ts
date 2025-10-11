@@ -1,4 +1,6 @@
+import AuthService from '@/services/auth';
 import {Router} from 'express';
+import {AuthDto} from '@/db/dto/auth';
 
 const router: Router = Router();
 
@@ -17,6 +19,9 @@ const router: Router = Router();
  *           schema:
  *             type: object
  *             properties:
+ *               browserId:
+ *                 type: string
+ *                 description: User ID
  *               email:
  *                 type: string
  *                 format: email
@@ -29,6 +34,7 @@ const router: Router = Router();
  *                 type: string
  *                 description: User full name
  *             required:
+ *               - browserId
  *               - email
  *               - password
  *               - name
@@ -43,7 +49,9 @@ const router: Router = Router();
  *                 user:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     browserId:
+ *                       type: string
+ *                     browserId:
  *                       type: string
  *                     email:
  *                       type: string
@@ -55,8 +63,14 @@ const router: Router = Router();
  *       400:
  *         description: Bad request - validation error or user already exists
  */
-router.post('/', (req, res) => {
-  res.send('Hello World');
+router.post('/', async (req, res) => {
+  try {
+    const {browserId, email, password, name} = AuthDto.signupDto.parse(req.body);
+    const user = await AuthService.signup({browserId, email, password, name});
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({error: 'Internal server error'});
+  }
 });
 
 export default router;

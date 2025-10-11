@@ -44,25 +44,10 @@ router.get('/browser/:browserId', async (req, res) => {
   try {
     const {browserId} = UserDto.findByBrowserIdDto.parse(req.params);
 
-    const user = await UserService.findByBrowserId({browserId});
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'User not found',
-        status: 'error',
-        message: 'No user found with this browser ID',
-      });
-    }
+    const {password, ...user} = await UserService.findByBrowserId({browserId});
 
     res.json({
-      user: {
-        id: user.id,
-        browserId: user.browserId,
-        name: user.name,
-        email: user.email,
-        numberOfSummaries: user.numberOfSummaries,
-        createdAt: user.createdAt,
-      },
+      user,
       status: 'success',
       message: 'User found successfully',
     });
@@ -127,7 +112,12 @@ router.put('/:id', async (req, res) => {
     const {id} = UserDto.idDto.parse(req.params);
     const updateData = UserDto.updateUserDto.parse(req.body);
 
-    const user = await UserService.update({id}, updateData);
+    // filter out undefined values
+    const filteredData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined)
+    ) as any;
+
+    const user = await UserService.update({id}, filteredData);
 
     res.json({
       user: {

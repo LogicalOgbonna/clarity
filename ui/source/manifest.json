@@ -18,7 +18,7 @@
     "128": "assets/icons/favicon-128.png"
   },
 
-  "permissions": ["contextMenus", "storage", "tabs", "activeTab", "scripting"],
+  "permissions": ["contextMenus", "storage", "activeTab", "scripting"],
   "__chrome__host_permissions": ["<all_urls>"],
 
   "__firefox|opera__content_security_policy": "script-src 'self'; object-src 'self'",

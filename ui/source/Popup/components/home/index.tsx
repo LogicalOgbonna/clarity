@@ -1,13 +1,16 @@
 import * as React from 'react';
 import './styles.scss';
+import {User} from '../../api';
 
-export const Home = (): React.ReactElement => {
+export const Home = ({user}: {user?: User; isLoading: boolean; isFetching: boolean}): React.ReactElement => {
   return (
     <React.Fragment>
       <div className="welcome-section">
         <span className="icon">💬</span>
-        <div className="title">Welcome to Clarity</div>
-        <div className="subtitle">Making the internet transparent, one privacy policy at a time</div>
+        <div className="title">
+          {user?.name ? user?.name.split(' ')[0] + ', welcome to Clarity' : 'Welcome to Clarity'}
+        </div>
+        <div className="subtitle">We are making the internet transparent, one privacy policy at a time</div>
       </div>
 
       <ul className="feature-list">

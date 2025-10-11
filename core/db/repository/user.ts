@@ -25,28 +25,27 @@ class UserRepository extends UserDto {
     }
   }
 
-  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User | null> {
+  static async findByBrowserId(data: InferType<typeof UserDto.findByBrowserIdDto>): Promise<User> {
     try {
       const {browserId} = UserDto.findByBrowserIdDto.parse(data);
-      return db.user.findUnique({where: {browserId}});
+      return db.user.findUniqueOrThrow({where: {browserId}});
     } catch (error) {
       throw error;
     }
   }
 
   static async update(
-    data: InferType<typeof UserDto.idDto>,
-    user: InferType<typeof UserDto.updateUserDto>
+    where: Prisma.userWhereUniqueInput,
+    user: Prisma.userUpdateInput
   ): Promise<User> {
     try {
-      const {id} = UserDto.idDto.parse(data);
       const updateData = UserDto.updateUserDto.parse(user);
       // Filter out undefined values for Prisma
       const filteredData = Object.fromEntries(
         Object.entries(updateData).filter(([_, value]) => value !== undefined)
       ) as any;
       return db.user.update({
-        where: {id},
+        where,
         data: filteredData,
       });
     } catch (error) {
