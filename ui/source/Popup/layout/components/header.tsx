@@ -11,7 +11,7 @@ export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactE
         <div className="logo">C</div>
         <h2>Clarity</h2>
       </div>
-      {(privacyCount || termsCount) && (
+      {(privacyCount || termsCount) ?  (
         <div className="policy-count" aria-live="polite">
           {privacyCount && (
             <div className="count-item">
@@ -37,7 +37,7 @@ export const Header = ({policyCount}: {policyCount?: PolicyCount}): React.ReactE
             </div>
           )}
         </div>
-      )}
+      ) : null}
       {/* <button className="menu-button" title="Menu">
       ⋯
     </button> */}
