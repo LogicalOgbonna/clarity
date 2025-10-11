@@ -9,7 +9,7 @@ import {Readability} from '@mozilla/readability';
 import {openai} from '@ai-sdk/openai';
 import {generateObject} from 'ai';
 import {object, string, array} from 'zod';
-import { LLM_MODEL } from '@/utils/model';
+import {LLM_MODEL} from '@/utils/model';
 
 export class PolicyService {
   /**
@@ -108,7 +108,7 @@ export class PolicyService {
         tagIds: tagIds,
       });
     } catch (error) {
-      console.log("🚀 ~ PolicyService ~ create ~ error:", error)
+      console.log('🚀 ~ PolicyService ~ create ~ error:', error);
       throw error;
     }
   }
@@ -203,5 +203,9 @@ export class PolicyService {
     select?: Prisma.policySelect;
   }): Promise<Policy[]> {
     return PolicyRepository.findByAny({where, select});
+  }
+
+  public static async policyCount({where}: {where: Prisma.policyWhereInput}): Promise<number> {
+    return PolicyRepository.policyCount({where});
   }
 }

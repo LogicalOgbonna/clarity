@@ -13,6 +13,11 @@ export interface User {
   plan: Plan;
 }
 
+export interface PolicyCount {
+  privacy: number;
+  terms: number;
+}
+
 const getToken = async (): Promise<string> => {
   const token = await getSetting(CLARITY_TOKEN_KEY, '');
   return `Bearer ${token}`;
@@ -34,6 +39,21 @@ export const getUserByBrowserId = async (): Promise<{user: User; message: string
     throw error;
   }
 };
+
+export const getPolicyCount = async (): Promise<PolicyCount> => {
+  const token = await getToken();
+  const response = await fetch(`${CLARITY_API_URL}/policy/count`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token,
+    },
+  });
+  return response.json();
+};
+
+export const landingPageQuery = async () => {
+  return Promise.all([getPolicyCount(), getUserByBrowserId()]);
+}
 
 export const getChatHistory = async ({
   userId,

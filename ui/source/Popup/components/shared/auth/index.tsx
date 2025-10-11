@@ -66,7 +66,7 @@ export const SignUpSignin = ({
       saveSetting(CLARITY_USER_ID_KEY, data.user.id);
       onSuccess?.(data.user);
       //   invalidate queries
-      queryClient.invalidateQueries(['user-data']);
+      queryClient.invalidateQueries(['landing-page-data']);
     },
   });
 

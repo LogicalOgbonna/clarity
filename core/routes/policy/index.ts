@@ -33,4 +33,14 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/count', async (req, res) => {
+  try {
+    const privacy = await PolicyService.policyCount({where: {type: 'privacy'}});
+    const terms = await PolicyService.policyCount({where: {type: 'terms'}});
+    res.json({privacy, terms, status: 'success', message: 'count fetched successfully'});
+  } catch (error) {
+    console.error(error);
+    res.json({error: JSON.stringify(error), status: 'error', message: 'count fetching failed'});
+  }
+});
 export default router;

@@ -67,6 +67,54 @@ body {
       }
     }
 
+    .policy-count {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background-color: #fff6f6;
+      border: 1px solid rgba(255, 74, 74, 0.2);
+      border-radius: 12px;
+      min-width: 160px;
+      justify-content: space-between;
+
+      .count-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .count-icon {
+          font-size: 18px;
+        }
+
+        .count-details {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.1;
+
+          .count-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #ff4a4a;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+
+          .count-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
+        }
+      }
+
+      .count-divider {
+        width: 1px;
+        height: 32px;
+        background: linear-gradient(180deg, rgba(255, 74, 74, 0.2), rgba(255, 74, 74, 0.05));
+      }
+    }
+
     .menu-button {
       background: none;
       border: none;
