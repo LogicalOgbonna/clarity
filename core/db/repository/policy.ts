@@ -108,6 +108,10 @@ class PolicyRepository extends PolicyDto {
       throw error;
     }
   }
+
+  static async policyCount({where}: {where: Prisma.policyWhereInput}): Promise<number> {
+    return db.policy.count({where});
+  }
 }
 
 export default PolicyRepository;
