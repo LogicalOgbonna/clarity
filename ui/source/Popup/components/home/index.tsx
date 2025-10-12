@@ -10,7 +10,7 @@ export const Home = ({user}: {user?: User; isLoading: boolean; isFetching: boole
         <div className="title">
           {user?.name ? user?.name.split(' ')[0] + ', welcome to Clarity' : 'Welcome to Clarity'}
         </div>
-        <div className="subtitle">We are making the internet transparent, one privacy policy at a time</div>
+        <div className="subtitle">We are making the internet transparent - one document at a time</div>
       </div>
 
       <ul className="feature-list">

@@ -71,7 +71,7 @@ export const Accounts = ({user}: AccountProps): React.ReactElement => {
             </button>
           </div>
         </div>
-        <div className="setting-item">
+        {/* <div className="setting-item">
           <div className="data-item">
             <div className="data-info">
               <h4>Delete Account</h4>
@@ -81,7 +81,7 @@ export const Accounts = ({user}: AccountProps): React.ReactElement => {
               Delete Account
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

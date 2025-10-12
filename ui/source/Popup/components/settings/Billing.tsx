@@ -62,8 +62,8 @@ export const Billing = ({user, switchTab}: BillingProps): React.ReactElement => 
   };
 
   const planPrice: Record<Plan, string> = {
-    pro: '$9',
-    team: '$29',
+    pro: '$2',
+    team: '$5',
     free: '$0',
   };
 
