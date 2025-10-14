@@ -132,7 +132,7 @@ export const SignUpSignin = ({
     signup: {
       buttonText: 'Sign Up',
       title: 'Setup a new account',
-      subtitle: "Don't have an account?",
+      subtitle: "Already have an account?",
       loadingText: 'Signing up...',
     },
     login: {

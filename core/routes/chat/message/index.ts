@@ -24,7 +24,7 @@ router.post('/:chatId', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Message creation failed',
     });

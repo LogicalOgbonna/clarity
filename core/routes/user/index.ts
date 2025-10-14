@@ -28,7 +28,7 @@ router.get('/browser/:browserId', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Failed to find user',
     });
@@ -65,7 +65,7 @@ router.get('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Failed to find user',
     });
@@ -108,7 +108,7 @@ router.put('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'User update failed',
     });
@@ -137,7 +137,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'User deletion failed',
     });

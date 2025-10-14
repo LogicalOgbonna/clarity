@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Failed to retrieve chat',
     });
@@ -65,7 +65,7 @@ router.post('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Chat continuation failed',
     });
@@ -95,7 +95,7 @@ router.put('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Chat update failed',
     });
@@ -123,7 +123,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Chat deletion failed',
     });
@@ -152,7 +152,7 @@ router.post('/', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Chat creation by link failed',
     });

@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
     } = await AuthService.signin(payload);
     res.json({user, token});
   } catch (error) {
-    res.status(500).json({error: 'Internal server error'});
+    res.status(500).json({error, status: 'error', message: 'User sign in failed'});
   }
 });
 

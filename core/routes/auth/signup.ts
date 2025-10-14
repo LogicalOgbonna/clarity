@@ -1,9 +1,9 @@
 import AuthService from '@/services/auth';
 import {Router} from 'express';
 import {AuthDto} from '@/db/dto/auth';
-import { ZodError } from 'zod';
-import { UserDto } from '@/db/dto/user';
-import { UserService } from '@/services/user';
+import {ZodError} from 'zod';
+import {UserDto} from '@/db/dto/user';
+import {UserService} from '@/services/user';
 
 const router: Router = Router();
 
@@ -72,10 +72,9 @@ router.post('/', async (req, res) => {
     const user = await AuthService.signup({browserId, email: email.trim().toLowerCase(), password, name});
     res.json(user);
   } catch (error) {
-    res.status(500).json({error: 'Internal server error'});
+    res.status(500).json({error, status: 'error', message: 'User sign up failed'});
   }
 });
-
 
 router.post('/browser', async (req, res) => {
   try {
@@ -103,7 +102,7 @@ router.post('/browser', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'User registration failed',
     });

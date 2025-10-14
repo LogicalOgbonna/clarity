@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Summary creation failed',
     });
@@ -70,7 +70,7 @@ router.post('/by-policy-id', async (req, res) => {
       });
     }
     res.status(500).json({
-      error: 'Internal server error',
+      error,
       status: 'error',
       message: 'Summary creation failed',
     });
