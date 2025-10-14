@@ -1,6 +1,6 @@
 export const CHAT_HISTORY_KEY = 'user_chats_';
 export const CLARITY_USER_ID_KEY = 'clarityUserId';
-export const CLARITY_API_URL = 'https://admin.blucarbone.co/api/clarity';
+export const CLARITY_API_URL = 'http://localhost:3000/api';
 export const CLARITY_TOKEN_KEY = 'clarityToken';
 export const CLARITY_BROWSER_ID_KEY = 'clarityBrowserId';
 export const CHAT_HISTORY_LIMIT = 50;
