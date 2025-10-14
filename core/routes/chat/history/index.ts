@@ -37,7 +37,7 @@ router.get('/:userId', async (req, res) => {
       });
     }
     res.status(500).json({
-      error,
+      error: JSON.stringify(error, null, 2),
       status: 'error',
       message: 'Failed to retrieve chat history',
     });

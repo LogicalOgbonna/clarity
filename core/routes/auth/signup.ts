@@ -72,7 +72,7 @@ router.post('/', async (req, res) => {
     const user = await AuthService.signup({browserId, email: email.trim().toLowerCase(), password, name});
     res.json(user);
   } catch (error) {
-    res.status(500).json({error, status: 'error', message: 'User sign up failed'});
+    res.status(500).json({error: JSON.stringify(error), status: 'error', message: 'User sign up failed'});
   }
 });
 
@@ -102,7 +102,7 @@ router.post('/browser', async (req, res) => {
       });
     }
     res.status(500).json({
-      error,
+      error: JSON.stringify(error, null, 2),
       status: 'error',
       message: 'User registration failed',
     });

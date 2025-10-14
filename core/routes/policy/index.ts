@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.json({error, status: 'error', message: 'Policies fetching failed'});
+    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Policies fetching failed'});
   }
 });
 
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.json({error, status: 'error', message: 'Policy creation failed'});
+    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Policy creation failed'});
   }
 });
 
@@ -40,7 +40,7 @@ router.get('/count', async (req, res) => {
     res.json({privacy, terms, status: 'success', message: 'count fetched successfully'});
   } catch (error) {
     console.error(error);
-    res.json({error, status: 'error', message: 'count fetching failed'});
+    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'count fetching failed'});
   }
 });
 export default router;

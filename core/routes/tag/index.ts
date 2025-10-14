@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({error, status: 'error', message: 'Tags fetching failed'});
+    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tags fetching failed'});
   }
 });
 
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({error, status: 'error', message: 'Tag creation failed'});
+    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag creation failed'});
   }
 });
 
@@ -53,7 +53,7 @@ router.post('/create-or-get-ids', async (req, res) => {
   } catch (error) {
     console.error('Error in create-or-get-ids:', error);
     res.status(500).json({
-      error,
+      error: JSON.stringify(error, null, 2),
       status: 'error',
       message: 'Tag ID creation/retrieval failed',
     });
@@ -70,7 +70,7 @@ router.get('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({error, status: 'error', message: 'Tag fetching failed'});
+    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag fetching failed'});
   }
 });
 
@@ -84,7 +84,7 @@ router.put('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({error, status: 'error', message: 'Tag update failed'});
+    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag update failed'});
   }
 });
 
@@ -98,7 +98,7 @@ router.delete('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({error, status: 'error', message: 'Tag deletion failed'});
+    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag deletion failed'});
   }
 });
 
