@@ -106,7 +106,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/LogicalOgbonna/clarity/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/LogicalOgbonna/clarity/discussions)
-- **Email**: [arinze@gmail.com](mailto:arinze@gmail.com)
+- **Email**: [arinzeogbo@gmail.com](mailto:arinzeogbo@gmail.com)
 
 ## 🔮 Roadmap
 
