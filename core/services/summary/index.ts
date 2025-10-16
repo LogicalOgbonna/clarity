@@ -175,7 +175,7 @@ export class SummaryService extends SummaryDto {
       const policy = await PolicyService.findByNumericID(policyId);
 
       // Create chat
-      const chatTitle = `${policy.type.charAt(0).toUpperCase() + policy.type.slice(1)} Policy Summary - ${policy.hostname}`;
+      const chatTitle = `${policy.type?.charAt(0)?.toUpperCase() + policy.type.slice(1)} Policy Summary - ${policy.hostname}`;
       const chat = await ChatService.create({
         userId,
         title: chatTitle,

@@ -113,6 +113,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Support more document types (Refund Policy, Return Policy, etc.)
 - [ ] Improve developer experience (e.g introduce [turborepo](https://turborepo.com/) for monorepo management and Better-Auth for authentication)
 - [ ] User Dashboard (e.g. Compare Privacy Versions, Analytics, Usage, etc.)
+- [ ] Better Error Handling and User Feedback
+- [ ] For large system prompt in Chrome Prompt API, use a different approach to avoid[ QuotaExceededError](https://github.com/webmachinelearning/prompt-api?tab=readme-ov-file#tokenization-context-window-length-limits-and-overflow)
 - [ ] A lot more features...
 ---
 

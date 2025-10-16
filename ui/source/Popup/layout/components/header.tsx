@@ -2,10 +2,22 @@ import * as React from 'react';
 import {PolicyCount} from '../../api';
 import {TabType} from '..';
 
-export const Header = ({policyCount, tab}: {policyCount?: PolicyCount, tab: TabType}): React.ReactElement => {
+export const Header = ({
+  policyCount,
+  tab,
+  onSignUp,
+  isSignedIn,
+  isLoading,
+}: {
+  policyCount?: PolicyCount;
+  tab: TabType;
+  onSignUp: (tab: TabType) => void;
+  isSignedIn: boolean;
+  isLoading: boolean;
+}): React.ReactElement => {
   const privacyCount = policyCount?.privacy ?? 0;
   const termsCount = policyCount?.terms ?? 0;
-  const isHomeTab = tab === 'home';
+  const isHomeTab = tab === 'home' || tab === 'settings';
 
   return (
     <div className="header">
@@ -13,7 +25,7 @@ export const Header = ({policyCount, tab}: {policyCount?: PolicyCount, tab: TabT
         <div className="logo">C</div>
         <h2>Clarity</h2>
       </div>
-      {(privacyCount || termsCount) && isHomeTab ?  (
+      {(privacyCount || termsCount) && isHomeTab ? (
         <div className="policy-count" aria-live="polite">
           {privacyCount && (
             <div className="count-item">
@@ -38,9 +50,11 @@ export const Header = ({policyCount, tab}: {policyCount?: PolicyCount, tab: TabT
           )}
         </div>
       ) : null}
-      {/* <button className="menu-button" title="Menu">
-      ⋯
-    </button> */}
+      {!isSignedIn && !isLoading ? (
+        <button className="menu-button" title="Menu" onClick={() => onSignUp('chat')}>
+          Sign Up
+        </button>
+      ) : null}
     </div>
   );
 };

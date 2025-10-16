@@ -49,13 +49,11 @@ const initializeChatHistory = async (): Promise<void> => {
   // Check if we have valid cached data in localStorage
   const cachedData = localStorage.getItem(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
-    console.log('Using cached chat history from localStorage');
     return;
   }
 
   // No valid cache found, fetch from API and store in localStorage
   try {
-    console.log('No valid cache found, fetching chat history from API...');
     const token = await getSetting(CLARITY_TOKEN_KEY, '');
     const response = await fetch(`${CLARITY_API_URL}/chat/history/${userId}?page=1&limit=50`, {
       headers: {
@@ -75,7 +73,6 @@ const initializeChatHistory = async (): Promise<void> => {
         cachedAt: Date.now(),
       };
       localStorage.setItem(cacheKey, JSON.stringify(dataWithTimestamp));
-      console.log('Chat history fetched and cached in localStorage');
     } else {
       // Initialize with empty array if fetch fails
       const emptyData = {
@@ -119,9 +116,8 @@ const addNewChatToHistory = async (newChat: any): Promise<void> => {
 
       data.cachedAt = Date.now(); // Update cache timestamp
       localStorage.setItem(cacheKey, JSON.stringify(data));
-      console.log('New chat added to history cache');
     } catch (error) {
-      console.error('Error updating chat history cache:', error);
+      // console.error('Error updating chat history cache:', error);
     }
   } else {
     // If no cache exists, initialize with the new chat
@@ -132,7 +128,6 @@ const addNewChatToHistory = async (newChat: any): Promise<void> => {
       cachedAt: Date.now(),
     };
     localStorage.setItem(cacheKey, JSON.stringify(newData));
-    console.log('Initialized chat history cache with new chat');
   }
 };
 
@@ -216,7 +211,6 @@ const getOrFetchPolicy = async ({
     return result.policy;
   } catch (error: unknown) {
     localStorage.setItem(errorKey, 'error');
-    console.error(`Error fetching/creating ${type} policy:`, error);
     return null;
   }
 };
@@ -254,7 +248,7 @@ const processElements = async (): Promise<void> => {
       await Promise.allSettled(policyPromises);
     }
   } catch (error) {
-    console.error('Error in content script:', error);
+    // console.error('Error in content script:', error);
   } finally {
     isProcessing = false;
   }

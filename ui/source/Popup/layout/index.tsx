@@ -19,10 +19,10 @@ export default function Layout({
     staleTime: 1000 * 60 * 5,
   });
   const [policyCount, user] = data || [];
-
+  const isSignedIn = user?.user?.id;
   return (
     <section id="popup">
-      <Header policyCount={policyCount} tab={activeTab} />
+      <Header policyCount={policyCount} tab={activeTab} onSignUp={setActiveTab} isSignedIn={!!isSignedIn} isLoading={isLoading} />
       <div className="content">
         {children({
           tab: activeTab,

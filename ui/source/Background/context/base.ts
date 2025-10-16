@@ -1,5 +1,6 @@
 import {browser} from 'webextension-polyfill-ts';
 import type {Menus} from 'webextension-polyfill-ts';
+import { SETTINGS_KEYS } from '../../common/utils';
 
 const PRIMARY_CONTEXT_MENU_CONTENTS = [
   {
@@ -43,3 +44,17 @@ export const setUpContextMenus = (): void => {
     }
   });
 };
+
+export const setDefaultSettings = (): void => {
+  browser.storage.sync.set({
+    [SETTINGS_KEYS.LANGUAGE]: 'en',
+    [SETTINGS_KEYS.AUTO_ANALYZE]: true,
+    [SETTINGS_KEYS.LLM_PROVIDER]: 'chrome',
+    [SETTINGS_KEYS.CHROME_CONFIG]: {
+      temperature: 1,
+      topK: 3,
+    },
+    [SETTINGS_KEYS.THEME]: 'auto',
+    [SETTINGS_KEYS.NOTIFICATIONS]: false,
+  });
+}

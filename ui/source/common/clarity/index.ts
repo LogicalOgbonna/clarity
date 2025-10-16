@@ -589,7 +589,7 @@ const clarity = (category: string, externalLink?: string): void => {
                 cursor: pointer;
                 transition: transform 0.2s;
               " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="User Profile">
-                ${userId.charAt(0).toUpperCase()}
+                ${userId?.charAt(0)?.toUpperCase()}
               </div>
               <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">History</h3>
             </div>
@@ -959,12 +959,16 @@ const clarity = (category: string, externalLink?: string): void => {
     ): void => {
       if (!question.trim()) return;
 
-      sendRequestWithToken((token) => {
+      sendRequestWithToken(({success, data}) => {
+        if(!success) {
+          responseMessage.innerHTML = `<div style="color: red;">${data}</div>`;
+          return;
+        }
         fetch(`${CLARITY_API_URL}/chat/${chatId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: token,
+            Authorization: data,
           },
           body: JSON.stringify({message: question}),
         })
@@ -1087,29 +1091,47 @@ const clarity = (category: string, externalLink?: string): void => {
               timestamp: new Date().getTime(),
               translate: false,
             });
-            throw new Error('Language model is unavailable');
           }
+        }).catch((error: Error) => {
+          responseMessage.innerHTML = generateResponseMessage({
+            content: error.message ?? 'Language model is unavailable',
+            id: 'error_language_model_unavailable',
+            timestamp: new Date().getTime(),
+            translate: false,
+          });
+          throw new Error(error.message ?? 'Language model is unavailable');
         });
         LanguageModel.create({
+          monitor(m) {
+            m.addEventListener("downloadprogress", e => {
+              responseMessage.innerHTML = generateResponseMessage({
+                content: `<p>Downloading language model... ${e.loaded * 100}%</p>`,
+                id: 'download_progress',
+                timestamp: new Date().getTime(),
+                translate: false,
+              });
+            });
+          },
           initialPrompts: [
             ...previousMessages.map((message) => ({
               role: message.role as LanguageModelMessageRole,
               content: message.parts.map((part) => part.text).join(''),
             })),
           ],
-        }).then((model) => {
-          promptSession = model;
-          model.prompt(question).then((response) => {
+        }).then((session) => {
+          promptSession = session;
+          session.prompt(question).then((response) => {
+            const parsedResponse = response.replaceAll('```html', '').replaceAll('```', '');
             const message: Message = {
               id: `assistant_response_${new Date().getTime()}`,
               role: 'assistant' as const,
-              parts: [{type: 'text', text: response}],
+              parts: [{type: 'text', text: parsedResponse}],
               attachments: [],
               createdAt: new Date().toISOString(),
               chatId: chatId,
             };
             responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
-              content: response,
+              content: parsedResponse,
               id: message.id,
               timestamp: new Date().getTime(),
             });
@@ -1122,16 +1144,17 @@ const clarity = (category: string, externalLink?: string): void => {
         });
       } else {
         promptSession.prompt(question).then((response: string) => {
+          const parsedResponse = response.replaceAll('```html', '').replaceAll('```', '');
           const message: Message = {
             id: `assistant_response_${new Date().getTime()}`,
             role: 'assistant' as const,
-            parts: [{type: 'text', text: response}],
+            parts: [{type: 'text', text: parsedResponse}],
             attachments: [],
             createdAt: new Date().toISOString(),
             chatId: chatId,
           };
           responseMessage.innerHTML = generateResponseMessageWithoutOuterDiv({
-            content: response,
+            content: parsedResponse,
             id: message.id,
             timestamp: new Date().getTime(),
           });
@@ -1353,9 +1376,20 @@ const clarity = (category: string, externalLink?: string): void => {
       }
     };
 
-    const sendRequestWithToken = (cb: (data: string) => void) => {
+    const sendRequestWithToken = (cb: (data: {success: boolean, data: string}) => void) => {
       chrome.storage.sync.get('clarityToken').then(({clarityToken}) => {
-        cb(`Bearer ${clarityToken}`);
+        if(!clarityToken) {
+          cb({
+            success: false,
+            data: 'Please open the extension popup and sign up to use Clarity.',
+          });
+          return;
+        } else {
+          cb({
+            success: true,
+            data: `Bearer ${clarityToken}`,
+          });
+        }
       });
     };
 
@@ -1370,12 +1404,16 @@ const clarity = (category: string, externalLink?: string): void => {
       contentCategory: string;
       userMessage: string;
     }): void => {
-      sendRequestWithToken((token) => {
+      sendRequestWithToken(({success, data}) => {
+        if(!success) {
+          messageElement.innerHTML = `<div style="color: red;">${data}</div>`;
+          return;
+        }
         fetch(`${CLARITY_API_URL}/summary`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: token,
+            Authorization: data,
           },
           body: JSON.stringify({
             link: url,
@@ -1583,12 +1621,16 @@ const clarity = (category: string, externalLink?: string): void => {
       category: string;
       userMessage: string;
     }): void => {
-      sendRequestWithToken((token) => {
+      sendRequestWithToken(({success, data}) => {
+        if(!success) {
+          responseElement.innerHTML = `<div style="color: red;">${data}</div>`;
+          return;
+        }
         fetch(`${CLARITY_API_URL}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: token,
+            Authorization: data,
           },
           body: JSON.stringify({
             link,
@@ -1645,11 +1687,28 @@ const clarity = (category: string, externalLink?: string): void => {
                     timestamp: new Date().getTime(),
                     translate: false,
                   });
-                  throw new Error('Language model is unavailable');
                 }
+              }).catch((error) => {
+                responseMessage.innerHTML = generateResponseMessage({
+                  content: `<p style="color: red;">Error checking language model availability: ${error.message}, please switch to a different LLM provider in settings.</p>`,
+                  id: 'error_check_language_model_availability',
+                  timestamp: new Date().getTime(),
+                  translate: false,
+                });
+                throw new Error(error.message ?? 'Language model is unavailable, please switch to a different LLM provider in settings.');
               });
               LanguageModel.create({
                 initialPrompts: systemMessages,
+                monitor(m) {
+                  m.addEventListener("downloadprogress", e => {
+                    responseElement.innerHTML = generateResponseMessage({
+                      content: `<p>Downloading language model... ${e.loaded * 100}%</p>`,
+                      id: 'download_progress',
+                      timestamp: new Date().getTime(),
+                      translate: false,
+                    });
+                  });
+                },
               }).then((model) => {
                 promptSession = model;
                 model.prompt(userMessage).then((response) => {
@@ -1671,12 +1730,16 @@ const clarity = (category: string, externalLink?: string): void => {
                   }
                   attachEventListenersToTranslateSelector([message]);
 
-                  sendRequestWithToken((token) => {
+                  sendRequestWithToken(({success, data}) => {
+                    if(!success) {
+                      responseMessage.innerHTML = `<div style="color: red;">${data}</div>`;
+                      return;
+                    }
                     fetch(`${CLARITY_API_URL}/chat/message/${chatId}`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
-                        Authorization: token,
+                        Authorization: data,
                       },
                       body: JSON.stringify({content: response, role: 'assistant', chatId: chatId}),
                     })
@@ -1691,7 +1754,12 @@ const clarity = (category: string, externalLink?: string): void => {
                         addNewChatToHistory(chat);
                       })
                       .catch((error: Error) => {
-                        console.log('Browser summarize error:', error); // TODO: Handle this error
+                        responseMessage.innerHTML = generateResponseMessage({
+                          content: `<p style="color: red;">Error saving message to history: ${error.message}</p>`,
+                          id: 'error_save_message_to_history',
+                          timestamp: new Date().getTime(),
+                          translate: false,
+                        });
                       });
                   });
                 });
@@ -1699,7 +1767,12 @@ const clarity = (category: string, externalLink?: string): void => {
             }
           })
           .catch((error) => {
-            console.log('Browser summarize error:', error); // TODO: Handle this error
+            responseMessage.innerHTML = generateResponseMessage({
+              content: `<p style="color: red;">Error creating chat: ${error.message}</p>`,
+              id: 'error_create_chat',
+              timestamp: new Date().getTime(),
+              translate: false,
+            });
           });
       });
     };
