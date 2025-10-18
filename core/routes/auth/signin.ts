@@ -1,6 +1,8 @@
 import {AuthDto} from '@/db/dto/auth';
 import AuthService from '@/services/auth';
+import {CoreError} from '@/utils/error';
 import {Router} from 'express';
+import {ZodError} from 'zod';
 
 const router: Router = Router();
 
@@ -63,8 +65,13 @@ router.post('/', async (req, res) => {
       token,
     } = await AuthService.signin(payload);
     res.json({user, token});
-  } catch (error) {
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'User sign in failed'});
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      const k = new CoreError('bad_request:auth', 'Validation error').toResponse();
+      res.status(k.statusCode).json(k);
+    }
+    const k = new CoreError('bad_request:auth', (error as Error)?.message ?? 'Invalid credentials', 'Please check your email and password and try again.').toResponse();
+    res.status(k.statusCode).json(k);
   }
 });
 

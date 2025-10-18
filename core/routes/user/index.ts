@@ -2,6 +2,7 @@ import {UserService} from '@/services/user';
 import {UserDto} from '@/db/dto/user';
 import {Router} from 'express';
 import {ZodError} from 'zod';
+import { CoreError } from '@/utils/error';
 
 const router: Router = Router();
 
@@ -17,21 +18,17 @@ router.get('/browser/:browserId', async (req, res) => {
       status: 'success',
       message: 'User found successfully',
     });
-  } catch (error) {
-    console.error('Error finding user by browser ID:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Failed to find user',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while finding the user by browser ID'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -54,21 +51,17 @@ router.get('/:id', async (req, res) => {
       status: 'success',
       message: 'User found successfully',
     });
-  } catch (error) {
-    console.error('Error finding user by ID:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+    } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Failed to find user',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while finding the user by ID'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -97,21 +90,17 @@ router.put('/:id', async (req, res) => {
       status: 'success',
       message: 'User updated successfully',
     });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'User update failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while updating the user'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -126,21 +115,17 @@ router.delete('/:id', async (req, res) => {
       status: 'success',
       message: 'User deleted successfully',
     });
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'User deletion failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while deleting the user'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 

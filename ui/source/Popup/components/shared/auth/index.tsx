@@ -68,6 +68,15 @@ export const SignUpSignin = ({
       //   invalidate queries
       queryClient.invalidateQueries(['landing-page-data']);
     },
+    onError: (error: {cause?: string; message: string; code: string}) => {
+      if (error.code === 'bad_request:auth') {
+        setFieldErrors({
+          name: true,
+          email: true,
+          password: true,
+        });
+      }
+    },
   });
 
   const handleFieldChange =
@@ -86,7 +95,8 @@ export const SignUpSignin = ({
       });
     };
 
-  const handleSignUpLogin = async (): Promise<void> => {
+  const handleSignUpLogin = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
     const browserId = await getSetting(CLARITY_BROWSER_ID_KEY, '');
     setSubmitted(true);
 
@@ -126,13 +136,13 @@ export const SignUpSignin = ({
       buttonText: string;
       title: string;
       subtitle: string;
-      loadingText: string
+      loadingText: string;
     }
   > = {
     signup: {
       buttonText: 'Sign Up',
       title: 'Setup a new account',
-      subtitle: "Already have an account?",
+      subtitle: 'Already have an account?',
       loadingText: 'Signing up...',
     },
     login: {
@@ -147,7 +157,8 @@ export const SignUpSignin = ({
     <div className="sign-up-account-content">
       <div className="sign-up-account">
         <h3 className="text-center">{modeTextMapper[mode].title}</h3>
-        <div className="sign-up-account-items">
+        {/* <div className="sign-up-account-items"> */}
+        <form onSubmit={handleSignUpLogin} className="sign-up-account-items">
           {isSignup && (
             <div className="sign-up-account-item">
               <label className="setting-label" htmlFor="name">
@@ -189,13 +200,14 @@ export const SignUpSignin = ({
               onChange={handleFieldChange('password')}
             />
           </div>
-          <button disabled={isLoading} className="setting-button secondary" type="button" onClick={handleSignUpLogin}>
+          <button disabled={isLoading} className="setting-button secondary" type="submit">
             {isLoading ? modeTextMapper[mode].loadingText : modeTextMapper[mode].buttonText}
           </button>
           <p className="text-center" onClick={handleToggleMode}>
             {modeTextMapper[mode].subtitle}
           </p>
-        </div>
+        </form>
+        {/* </div> */}
       </div>
     </div>
   );

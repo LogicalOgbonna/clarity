@@ -4,6 +4,7 @@ import {Router} from 'express';
 import {ZodError} from 'zod';
 import historyRouter from './history';
 import messageRouter from './message';
+import { CoreError } from '@/utils/error';
 
 const router: Router = Router();
 
@@ -25,20 +26,17 @@ router.get('/:id', async (req, res) => {
       status: 'success',
       message: 'Chat retrieved successfully',
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Failed to retrieve chat',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while retrieving the chat'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -55,20 +53,17 @@ router.post('/:id', async (req, res) => {
       status: 'success',
       message: 'Chat continued successfully',
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Chat continuation failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while continuing the chat'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -85,20 +80,17 @@ router.put('/:id', async (req, res) => {
       status: 'success',
       message: 'Chat updated successfully',
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Chat update failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while updating the chat'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -113,20 +105,13 @@ router.delete('/:id', async (req, res) => {
       status: 'success',
       message: 'Chat deleted successfully',
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Chat deletion failed',
-    });
+    const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'An error occurred while deleting the chat').toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -142,20 +127,17 @@ router.post('/', async (req, res) => {
       status: 'success',
       message: 'Chat created by link successfully',
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+    } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Chat creation by link failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating the chat by link'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 

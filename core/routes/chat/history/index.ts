@@ -2,6 +2,7 @@ import {ChatService} from '@/services/chat';
 import {ChatDto} from '@/db/dto/chat';
 import {Router} from 'express';
 import {ZodError} from 'zod';
+import { CoreError } from '@/utils/error';
 
 const router: Router = Router();
 
@@ -26,21 +27,17 @@ router.get('/:userId', async (req, res) => {
       status: 'success',
       message: 'Chat history retrieved successfully',
     });
-  } catch (error) {
-    console.error('Error getting user chat history:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Failed to retrieve chat history',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while retrieving the chat history'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 

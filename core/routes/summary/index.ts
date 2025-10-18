@@ -1,5 +1,6 @@
 import {SummaryDto} from '@/db/dto/summary';
 import {SummaryService} from '@/services/summary';
+import {CoreError} from '@/utils/error';
 import {Router} from 'express';
 import {z} from 'zod';
 
@@ -26,20 +27,17 @@ router.post('/', async (req, res) => {
       status: 'success',
       message: 'Summary created successfully',
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Summary creation failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating the summary'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -59,21 +57,17 @@ router.post('/by-policy-id', async (req, res) => {
       status: 'success',
       message: 'Summary created successfully',
     });
-  } catch (error) {
-    console.error('Error creating summary by policy ID:', error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Summary creation failed',
-    });
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating the summary by policy ID'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 

@@ -7,8 +7,8 @@ import {setDefaultSettings, setUpContextMenus} from '../context/base';
  * Note: Default links are now fetched dynamically per page instead of on install
  * @returns {Promise<void>}
  */
-browser.runtime.onInstalled.addListener(async (): Promise<void> => {
+browser.runtime.onInstalled.addListener(async () => {
   await getBrowserId();
   setUpContextMenus();
-  setDefaultSettings();
+  await setDefaultSettings();
 });

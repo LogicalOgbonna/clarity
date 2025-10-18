@@ -4,6 +4,7 @@ import {AuthDto} from '@/db/dto/auth';
 import {ZodError} from 'zod';
 import {UserDto} from '@/db/dto/user';
 import {UserService} from '@/services/user';
+import {CoreError} from '@/utils/error';
 
 const router: Router = Router();
 
@@ -71,8 +72,13 @@ router.post('/', async (req, res) => {
     const {browserId, email, password, name} = AuthDto.signupDto.parse(req.body);
     const user = await AuthService.signup({browserId, email: email.trim().toLowerCase(), password, name});
     res.json(user);
-  } catch (error) {
-    res.status(500).json({error: JSON.stringify(error), status: 'error', message: 'User sign up failed'});
+  } catch (err: unknown) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:user', 'Validation error').toResponse();
+      res.status(error.statusCode).json({...error, details: err.issues});
+    }
+    const error = new CoreError('bad_request:user', (err as Error)?.message ?? 'User sign up failed').toResponse();
+    res.status(error.statusCode).json({...error});
   }
 });
 
@@ -91,21 +97,13 @@ router.post('/browser', async (req, res) => {
       status: 'success',
       message: 'User registered successfully',
     });
-  } catch (error) {
-    console.error('Error registering user:', error);
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Validation error',
-        details: error.issues,
-        status: 'error',
-        message: 'Invalid request data',
-      });
+  } catch (err: unknown) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:user', 'Validation error').toResponse();
+      res.status(error.statusCode).json({...error, details: err.issues});
     }
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'User registration failed',
-    });
+    const error = new CoreError('bad_request:user', (err as Error)?.message ?? 'User registration failed').toResponse();
+    res.status(error.statusCode).json({...error});
   }
 });
 export default router;

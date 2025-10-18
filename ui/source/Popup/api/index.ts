@@ -33,27 +33,32 @@ export const getUserByBrowserId = async (): Promise<{user: User; message: string
         Authorization: token,
       },
     });
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
     return response.json();
   } catch (error) {
-    console.error('Error getting user by browser ID:', error);
     throw error;
   }
 };
 
 export const getPolicyCount = async (): Promise<PolicyCount> => {
   const token = await getToken();
-  const response = await fetch(`${CLARITY_API_URL}/policy/count`, {
+  const response = await fetch(`${CLARITY_API_URL}/scout/count`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: token,
     },
   });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
   return response.json();
 };
 
 export const landingPageQuery = async () => {
   return Promise.all([getPolicyCount(), getUserByBrowserId()]);
-}
+};
 
 export const getChatHistory = async ({
   userId,
@@ -71,6 +76,9 @@ export const getChatHistory = async ({
       Authorization: token,
     },
   });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
   return response.json();
 };
 export const signup = async ({
@@ -94,10 +102,12 @@ export const signup = async ({
         Authorization: token,
       },
     });
-    return response.json();
+    if (!response.ok) {
+      throw response;
+    }
+    return await response.json();
   } catch (error) {
-    console.error('Error signing up:', error);
-    throw error;
+    throw await (error as Response).json();
   }
 };
 
@@ -118,9 +128,11 @@ export const login = async ({
         Authorization: token,
       },
     });
+    if (!response.ok) {
+      throw response;
+    }
     return response.json();
   } catch (error) {
-    console.error('Error logging in:', error);
-    throw error;
+    throw await (error as Response).json();
   }
 };

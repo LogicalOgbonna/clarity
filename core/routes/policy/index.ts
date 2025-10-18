@@ -1,4 +1,5 @@
 import {PolicyService} from '@/services/policy';
+import {CoreError} from '@/utils/error';
 import {Router} from 'express';
 
 const router: Router = Router();
@@ -13,9 +14,13 @@ router.get('/', async (req, res) => {
       status: 'success',
       message: 'Policies fetched successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Policies fetching failed'});
+  } catch (err: any) {
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while fetching the policies'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -27,9 +32,13 @@ router.post('/', async (req, res) => {
       status: 'success',
       message: 'Policy created successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Policy creation failed'});
+  } catch (err: any) {
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating the policy'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -38,9 +47,13 @@ router.get('/count', async (req, res) => {
     const privacy = await PolicyService.policyCount({where: {type: 'privacy'}});
     const terms = await PolicyService.policyCount({where: {type: 'terms'}});
     res.json({privacy, terms, status: 'success', message: 'count fetched successfully'});
-  } catch (error) {
-    console.error(error);
-    res.json({error: JSON.stringify(error, null, 2), status: 'error', message: 'count fetching failed'});
+  } catch (err: any) {
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while fetching the policy count'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 export default router;

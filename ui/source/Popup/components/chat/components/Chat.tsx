@@ -12,7 +12,7 @@ interface ChatProps {
 
 declare const Translator: {
   availability({
-    sourceLanguage, 
+    sourceLanguage,
     targetLanguage,
     monitor,
   }: {
@@ -34,16 +34,12 @@ declare const self: {
 };
 
 export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
-  const [currentSourceLanguage, setCurrentSourceLanguage] = React.useState<
-    Record<string, string>
-  >({});
+  const [currentSourceLanguage, setCurrentSourceLanguage] = React.useState<Record<string, string>>({});
   const [defaultLanguage, setDefaultLanguage] = React.useState<string>('en');
   const [inputValue, setInputValue] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [messages, setMessages] = React.useState<Message[]>(
-    chat?.messages || []
-  );
-
+  const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
+  const [downloadProgressText, setDownloadProgressText] = React.useState<number>(0);
   React.useEffect(() => {
     if (chat?.messages) {
       setMessages(chat.messages);
@@ -54,6 +50,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     };
     loadSettings();
     return () => {
+      // close the language model session
       closeLLM();
     };
   }, [chat?.messages]);
@@ -63,9 +60,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
       <div className="chat-error">
         <div className="error-icon">⚠️</div>
         <div className="error-title">No chat found</div>
-        <div className="error-subtitle">
-          Please select a chat from the history
-        </div>
+        <div className="error-subtitle">Please select a chat from the history</div>
       </div>
     );
   }
@@ -85,7 +80,11 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
       },
     ]);
     try {
-      const response = await askLLM({prompt: inputValue, messages});
+      const response = await askLLM({
+        userMessage: inputValue,
+        messages,
+        monitorDownloadProgress: setDownloadProgressText,
+      });
       if (response.success) {
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -99,6 +98,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
           },
         ]);
         // TODO: Send message to server to be saved
+        
       } else {
         console.error('Failed to send message:', response.message);
       }
@@ -152,10 +152,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
 
     setIsLoading(true);
 
-    const llmProvider = await getSetting<'chrome' | 'server'>(
-      SETTINGS_KEYS.LLM_PROVIDER,
-      'chrome'
-    );
+    const llmProvider = await getSetting<'chrome' | 'server'>(SETTINGS_KEYS.LLM_PROVIDER, 'chrome');
 
     if (llmProvider === 'chrome') {
       await handleSendMessageWithChromeLLM();
@@ -197,21 +194,16 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
         sourceLanguage,
         targetLanguage,
       }).then((translator) => {
-        translator
-          .translate(message.parts.map((part) => part.text).join(''))
-          .then((translatedText) => {
-            message.parts = [{text: translatedText, type: 'text'}];
-            messages[messageIndex] = message;
-            setMessages([...messages]);
-          });
+        translator.translate(message.parts.map((part) => part.text).join('')).then((translatedText) => {
+          message.parts = [{text: translatedText, type: 'text'}];
+          messages[messageIndex] = message;
+          setMessages([...messages]);
+        });
       });
     }
   };
 
-  const renderMessage = (
-    message: ChatData['messages'][0],
-    index: number
-  ): React.ReactElement => {
+  const renderMessage = (message: ChatData['messages'][0], index: number): React.ReactElement => {
     const isUser = message.role === 'user';
     const content = message.parts.map((part) => part.text).join('');
 
@@ -219,18 +211,13 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     // if it's not same as the default language, then translate the message to the default language
 
     return (
-      <div
-        key={message.id || index}
-        className={`message ${isUser ? 'user-message' : 'assistant-message'}`}
-      >
+      <div key={message.id || index} className={`message ${isUser ? 'user-message' : 'assistant-message'}`}>
         <div
           className="message-content"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: content}}
         />
-        <div
-          className={`message-time ${isUser ? 'message-time-user' : 'message-time-assistant'}`}
-        >
+        <div className={`message-time ${isUser ? 'message-time-user' : 'message-time-assistant'}`}>
           {formatTimestamp(new Date(message.createdAt).getTime())}
         </div>
         {!isUser && (
@@ -238,11 +225,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
             <LanguageOptions
               value={currentSourceLanguage[message.id] ?? defaultLanguage}
               onChange={(language) => {
-                handleTranslateMessage(
-                  message.id,
-                  language,
-                  currentSourceLanguage[message.id] ?? defaultLanguage
-                );
+                handleTranslateMessage(message.id, language, currentSourceLanguage[message.id] ?? defaultLanguage);
               }}
             />
           </div>
@@ -255,12 +238,7 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
     <div className="chat-interface">
       {/* Chat Header */}
       <div className="interface-header">
-        <button
-          type="button"
-          className="back-button"
-          onClick={onBack}
-          title="Back to chat history"
-        >
+        <button type="button" className="back-button" onClick={onBack} title="Back to chat history">
           ←
         </button>
       </div>
@@ -273,13 +251,18 @@ export const Chat: React.FC<ChatProps> = ({chat = null, onBack}) => {
           <div className="empty-chat">
             <div className="empty-icon">💬</div>
             <div className="empty-title">Start a conversation</div>
-            <div className="empty-subtitle">
-              Ask me anything about this chat
-            </div>
+            <div className="empty-subtitle">Ask me anything about this chat</div>
           </div>
         )}
 
         {/* Loading indicator */}
+        {downloadProgressText && (
+          <div className="message assistant-message">
+            <div className="message-content">
+              <span>Downloading language model... {downloadProgressText}%</span>
+            </div>
+          </div>
+        )}
         {isLoading && (
           <div className="message assistant-message">
             <div className="message-content">

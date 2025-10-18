@@ -74,4 +74,19 @@ export const SETTINGS_KEYS = {
   THEME: 'theme',
   NOTIFICATIONS: 'notifications',
   AUTO_ANALYZE: 'autoAnalyze',
+  TERMS_PROMPT: 'terms',
+  PRIVACY_PROMPT: 'privacy',
 } as const;
+
+export const fetchPrompt = async (): Promise<{terms: string; privacy: string}> => {
+  try {
+    const response = await fetch('/api/scout/prompt');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch prompt: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return {terms: data.terms, privacy: data.privacy};
+  } catch (error) {
+    throw error;
+  }
+};

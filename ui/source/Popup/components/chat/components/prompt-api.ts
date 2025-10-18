@@ -2,15 +2,17 @@ import {Message} from '../types.d';
 import {getSetting, SETTINGS_KEYS} from '../../../../common/utils';
 
 interface AskLLMProps {
-  prompt: string;
+  userMessage: string;
   messages: Message[];
+  monitorDownloadProgress?: (progress: number) => void;
 }
 
 let session: LanguageModel | null = null;
 
 export const askLLM = async ({
-  prompt,
+  userMessage,
   messages,
+  monitorDownloadProgress,
 }: AskLLMProps): Promise<{
   success: boolean;
   message: string;
@@ -30,11 +32,7 @@ export const askLLM = async ({
   if (!session) {
     session = await LanguageModel.create({
       initialPrompts: [
-        {
-          role: 'system',
-          content: `You are a helpful assistant summarizing boring legal pages like Terms of Service and Privacy Policies in a way a 5-year-old can understand. 
-        Be short, simple, and straight to the point. Return your response as well-formatted HTML starting from a <div>, without including <html>, <head>, or <body> tags.`,
-        },
+        // System prompt is not required here as it is already set in the system message from the server
         ...messages.map((message) => ({
           role: message.role as LanguageModelMessageRole,
           content: message.parts.map((part) => part.text).join(''),
@@ -57,12 +55,12 @@ export const askLLM = async ({
       ...defaultChromeLLMConfig,
       monitor: (m) => {
         m.addEventListener('downloadprogress', (e: any) => {
-          console.log(`Downloaded ${e.loaded * 100}%`);
+          monitorDownloadProgress?.(e.loaded * 100);
         });
       },
     });
   }
-  const response = await session.prompt(prompt);
+  const response = await session.prompt(userMessage);
 
   return {success: true, message: response};
 };

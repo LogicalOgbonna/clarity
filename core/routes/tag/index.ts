@@ -1,5 +1,7 @@
 import {TagService} from '@/services/tag';
 import {Router} from 'express';
+import {CoreError} from '@/utils/error';
+import {ZodError} from 'zod';
 
 const router: Router = Router();
 
@@ -11,9 +13,13 @@ router.get('/', async (req, res) => {
       status: 'success',
       message: 'Tags fetched successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tags fetching failed'});
+  } catch (err: any) {
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while fetching the tags'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -25,9 +31,13 @@ router.post('/', async (req, res) => {
       status: 'success',
       message: 'Tag created successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag creation failed'});
+  } catch (err: any) {
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating the tag'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -50,13 +60,17 @@ router.post('/create-or-get-ids', async (req, res) => {
       status: 'success',
       message: 'Tag IDs retrieved/created successfully',
     });
-  } catch (error) {
-    console.error('Error in create-or-get-ids:', error);
-    res.status(500).json({
-      error: JSON.stringify(error, null, 2),
-      status: 'error',
-      message: 'Tag ID creation/retrieval failed',
-    });
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
+    }
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while creating or getting tag IDs'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -68,9 +82,17 @@ router.get('/:id', async (req, res) => {
       status: 'success',
       message: 'Tag fetched successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag fetching failed'});
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
+    }
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while fetching the tag'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -82,9 +104,17 @@ router.put('/:id', async (req, res) => {
       status: 'success',
       message: 'Tag updated successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag update failed'});
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
+    }
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while updating the tag'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
@@ -96,9 +126,17 @@ router.delete('/:id', async (req, res) => {
       status: 'success',
       message: 'Tag deleted successfully',
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({error: JSON.stringify(error, null, 2), status: 'error', message: 'Tag deletion failed'});
+  } catch (err: any) {
+    if (err instanceof ZodError) {
+      const error = new CoreError('bad_request:api', err?.message ?? err?.cause, 'Validation error').toResponse();
+      return res.status(error.statusCode).json({...error, details: err.issues});
+    }
+    const error = new CoreError(
+      'bad_request:api',
+      err?.message ?? err?.cause,
+      'An error occurred while deleting the tag'
+    ).toResponse();
+    res.status(error.statusCode).json(error);
   }
 });
 
