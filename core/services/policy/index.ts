@@ -33,7 +33,6 @@ export class PolicyService {
       // TODO: check if the policy already exists in the database,
       // if it does, compare the createdAt date with the current parsed policy date,
       // if the current policy is older than 1 week, fetch a new one and compare their dates (comparing the hashes of their dates)
-      // TODO: add restriction to the number of policies a user can create in a month
       const {link, type, timeoutMs, waitFor} = PolicyDto.createPolicyRequestDto.parse(data);
       const timeoutMsNumber = Math.min(Number(timeoutMs) || 10000, 30000);
       const {hostname} = new URL(link);
@@ -63,6 +62,8 @@ export class PolicyService {
       const dom = new JSDOM(html, {url: link});
       const reader = new Readability(dom.window.document);
       const article = reader.parse();
+      context.close();
+      browser.close();
 
       const content = article?.textContent || text;
 
