@@ -62,7 +62,6 @@ export class PolicyService {
       const dom = new JSDOM(html, {url: link});
       const reader = new Readability(dom.window.document);
       const article = reader.parse();
-      context.close();
       browser.close();
 
       const content = article?.textContent || text;
